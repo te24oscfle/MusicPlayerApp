@@ -4,7 +4,7 @@ namespace MusicPlayerApp
 {
     public static class CommandRegistry
     {
-        public static Dictionary<string, CommandDef> DiscoverCommands()
+        public static Dictionary<string, CommandDef> DiscoverCommands(bool getAliases)
         {
             var assembly = Assembly.GetExecutingAssembly();
 
@@ -20,16 +20,22 @@ namespace MusicPlayerApp
                     Attribute = type.GetCustomAttribute<CommandAttribute>()
                 })
                 .Where(x => x.Attribute != null)
-                .Select(x => new CommandDef(
-                    (ICommand)Activator.CreateInstance(x.Type)!,
-                    x.Attribute!)
-                );
+                .ToDictionary(
+                    x => x.Attribute!.Name,
+                    x => new CommandDef(
+                        (ICommand)Activator.CreateInstance(x.Type)!,
+                        x.Attribute!));
             
+            if (getAliases)
+                return commandDefs;
+
             // Add aliases
             var allCommands = new Dictionary<string, CommandDef>();
 
-            foreach (var commandDef in commandDefs)
+            foreach (var pair in commandDefs)
             {
+                CommandDef commandDef = pair.Value;
+                
                 allCommands.Add(commandDef.Metadata.Name, commandDef);
                 
                 if (commandDef.Metadata.Aliases == null)
@@ -40,7 +46,7 @@ namespace MusicPlayerApp
                     allCommands.Add(alias, commandDef);    
                 }
             }
-            
+
             return allCommands;
         }
     }
