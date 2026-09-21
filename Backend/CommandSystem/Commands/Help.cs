@@ -1,4 +1,4 @@
-namespace MusicPlayerApp
+namespace CommandSystem
 {
     [Command(
         "help", 
@@ -12,14 +12,16 @@ namespace MusicPlayerApp
         {
             var metadata = commandDef.Metadata;
             
-            Console.WriteLine($"\n{metadata.Name}");
+            Console.WriteLine($"{metadata.Name}");
             Console.WriteLine($"\t{metadata.Description}");
 
             if (!string.IsNullOrWhiteSpace(metadata.Usage))
                 Console.WriteLine($"\tUsage: {metadata.Usage}");
             
-            if (metadata.Aliases != null)
+            if (metadata.Aliases != null && metadata.Aliases.Length > 0)
                 Console.WriteLine($"\tAliases: {string.Join(", ", metadata.Aliases)}");
+            
+            Console.Write("\n");
         }
         public Task Execute(string[] arguments)
         {

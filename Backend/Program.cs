@@ -1,6 +1,51 @@
-var builder = WebApplication.CreateBuilder(args);
-var app = builder.Build();
+// Template code:
+// var builder = WebApplication.CreateBuilder(args);
+// var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
+// app.MapGet("/", () => "Hello World!");
 
-app.Run();
+// app.Run();
+
+using CommandSystem;
+
+namespace MusicPlayerApp
+{
+    public static class Program
+    {
+        static async Task Main(string[] args)
+        {
+            var commands = CommandRegistry.DiscoverCommands(true);
+
+            bool shouldExit = false;
+            while(!shouldExit)
+            {
+                Console.Write(">> ");
+
+                string? input = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(input))
+                    continue;
+                
+                // doSomething someArgument someOtherArgument
+                // =>   commandName = "doSomething";
+                //      arguments = ["someArgument", "someOtherArgument"];
+                string[] split = input.Split(" ");
+                string commandName = split[0];
+                string[] arguments = split.Skip(1).ToArray();
+
+                if (commandName == "exit")
+                {
+                    shouldExit = true;
+                    continue;
+                }
+                
+                if(!commands.TryGetValue(commandName, out CommandDef? commandDef))
+                {
+                    Console.WriteLine("Invalid command.");
+                    continue;
+                }
+
+                await commandDef.command.Execute(arguments);
+            }
+        }
+    }
+}

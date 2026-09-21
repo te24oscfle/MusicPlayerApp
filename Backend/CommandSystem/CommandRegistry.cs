@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace MusicPlayerApp
+namespace CommandSystem
 {
     public static class CommandRegistry
     {
@@ -26,7 +26,7 @@ namespace MusicPlayerApp
                         (ICommand)Activator.CreateInstance(x.Type)!,
                         x.Attribute!));
             
-            if (getAliases)
+            if (!getAliases)
                 return commandDefs;
 
             // Add aliases
