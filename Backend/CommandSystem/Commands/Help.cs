@@ -3,9 +3,9 @@ namespace CommandSystem
     [Command(
         "help", 
         "Lists all commands and their usage and aliases", 
-        "help <commandName?>",
-        "h"
+        "help <commandName?>"
     )]
+
     public class Help : ICommand
     {
         private void PrintCommandDef(CommandDef commandDef)
@@ -23,6 +23,7 @@ namespace CommandSystem
             
             Console.Write("\n");
         }
+
         public Task Execute(string[] arguments)
         {
             Dictionary<string, CommandDef> commandDefs = CommandRegistry.DiscoverCommands(false);
