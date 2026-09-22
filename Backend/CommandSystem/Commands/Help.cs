@@ -5,12 +5,11 @@ namespace CommandSystem
         "Lists all commands and their usage and aliases", 
         "help <commandName?>"
     )]
-
     public class Help : ICommand
     {
         private void PrintCommandDef(CommandDef commandDef)
         {
-            var metadata = commandDef.Metadata;
+            CommandAttribute metadata = commandDef.Metadata;
             
             Console.WriteLine($"{metadata.Name}");
             Console.WriteLine($"\t{metadata.Description}");
@@ -30,7 +29,7 @@ namespace CommandSystem
             
             if (arguments.Length > 0)
             {
-                // User has requested help on a specific command
+                // User has called help on a specific command
                 string commandName = arguments[0];
                 if (!commandDefs.TryGetValue(commandName, out CommandDef? commandDef))
                 {

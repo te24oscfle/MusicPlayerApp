@@ -14,7 +14,7 @@ namespace MusicPlayerApp
     {
         static async Task Main(string[] args)
         {
-            var commands = CommandRegistry.DiscoverCommands(true);
+            Dictionary<string, CommandDef> commands = CommandRegistry.DiscoverCommands(true);
 
             bool shouldExit = false;
             while(!shouldExit)
