@@ -1,6 +1,3 @@
-using System.Reflection.Metadata;
-using Microsoft.AspNetCore.Razor.TagHelpers;
-
 namespace MusicPlayerApp
 {
     public static class Library
@@ -40,13 +37,24 @@ namespace MusicPlayerApp
             
             if(Directory.Exists(path))
             {
+                // Get all valid filePaths
                 string[] filePaths = GetFilePathsFromDirectory(path);
                 string[] validFilePaths = GetValidFilePaths(filePaths);
 
-                foreach(string p in validFilePaths)
+                // Get file paths already in database
+                List<string> filePathsInDatabase = new List<string>(); // TODO: Implement
+
+                // Create track objects
+                List<Track> newTracks = new List<Track>(validFilePaths.Length);
+
+                foreach(string filePath in validFilePaths)
                 {
-                    Console.WriteLine(p);
+                    if (filePathsInDatabase.Contains(filePath))
+                        continue;
+                    newTracks.Add(new Track(0, filePath));
                 }
+
+                // TODO: Insert tracks into database
             };
         }
     }
