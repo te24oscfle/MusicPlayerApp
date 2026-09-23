@@ -41,5 +41,19 @@ namespace Database
 
             isDatabaseInitilized = true;
         }
+
+        public static List<string> GetFilePaths()
+        {
+            if (!isDatabaseInitilized)
+                throw new Exception("Database must be initialized before this function can be called");
+            
+            using SqliteConnection connection = GetConnection();
+
+            SqliteCommand command = new SqliteCommand( // TODO: Select all tracks and grab only the filePaths
+                """
+                SELECT * FROM tracks
+
+                """, connection);
+        }
     }    
 }
