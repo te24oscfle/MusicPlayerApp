@@ -54,6 +54,8 @@ namespace MusicPlayerApp
                     newTracks.Add(new Track(0, filePath));
                 }
 
+                // TODO: Search for new albums via Track metadata
+                
                 // TODO: Insert tracks into database
             };
         }

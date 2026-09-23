@@ -7,6 +7,7 @@
 // app.Run();
 
 using CommandSystem;
+using Database;
 
 namespace MusicPlayerApp
 {
@@ -15,6 +16,8 @@ namespace MusicPlayerApp
         static async Task Main(string[] args)
         {
             Dictionary<string, CommandDef> commands = CommandRegistry.DiscoverCommands(true);
+
+            DatabaseManager.InitilizeDatabase();
 
             bool shouldExit = false;
             while(!shouldExit)
