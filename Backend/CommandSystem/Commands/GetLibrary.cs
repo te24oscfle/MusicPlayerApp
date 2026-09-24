@@ -21,7 +21,24 @@ namespace CommandSystem
             }
 
             foreach(Track track in tracks)
-                Console.WriteLine($"ID={track.TrackId}: {track.FilePath}");
+            {
+                TrackMetadata metadata = track.Metadata;
+                Console.WriteLine($"{track.TrackId}. {metadata.Title}");
+                Console.WriteLine($"\tTrack ID: {track.TrackId}");
+                Console.WriteLine($"\tFile Path: {track.FilePath}");
+                Console.Write("\n");
+                Console.WriteLine($"\tTitle: {metadata.Title}");
+                Console.WriteLine($"\tAlbum: {metadata.Album}");
+                Console.WriteLine($"\tAlbum Artist: {metadata.AlbumArtist}");
+                Console.WriteLine($"\tTrack Number: {metadata.TrackNumber}");
+                Console.WriteLine($"\tDisc Number: {metadata.DiscNumber}");
+                Console.WriteLine($"\tDuration: {metadata.DurationSeconds} seconds");
+                Console.WriteLine($"\tDate: {metadata.Date}");
+                Console.WriteLine($"\tGenre: {metadata.Genre}");
+                Console.Write("\n");
+                Console.Write("\n");
+            }
+
             return Task.CompletedTask;
         }
     }
