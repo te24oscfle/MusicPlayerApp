@@ -55,6 +55,10 @@
             "Microsoft.Data.Sqlite": {
               "target": "Package",
               "version": "[10.0.12, )"
+            },
+            "z440.atl.core": {
+              "target": "Package",
+              "version": "[7.17.0, )"
             }
           },
           "imports": [

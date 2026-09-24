@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "zBlk7yBki+U=",
+  "dgSpecHash": "mCx3pOwbqOQ=",
   "success": true,
   "projectFilePath": "E:\\Projects\\MusicPlayerApplication\\Backend\\Backend.csproj",
   "expectedPackageFiles": [
@@ -9,7 +9,9 @@
     "C:\\Users\\Oscar\\.nuget\\packages\\sqlitepclraw.bundle_e_sqlite3\\2.1.12\\sqlitepclraw.bundle_e_sqlite3.2.1.12.nupkg.sha512",
     "C:\\Users\\Oscar\\.nuget\\packages\\sqlitepclraw.core\\2.1.12\\sqlitepclraw.core.2.1.12.nupkg.sha512",
     "C:\\Users\\Oscar\\.nuget\\packages\\sqlitepclraw.lib.e_sqlite3\\2.1.12\\sqlitepclraw.lib.e_sqlite3.2.1.12.nupkg.sha512",
-    "C:\\Users\\Oscar\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.12\\sqlitepclraw.provider.e_sqlite3.2.1.12.nupkg.sha512"
+    "C:\\Users\\Oscar\\.nuget\\packages\\sqlitepclraw.provider.e_sqlite3\\2.1.12\\sqlitepclraw.provider.e_sqlite3.2.1.12.nupkg.sha512",
+    "C:\\Users\\Oscar\\.nuget\\packages\\ude.netstandard\\1.2.0\\ude.netstandard.1.2.0.nupkg.sha512",
+    "C:\\Users\\Oscar\\.nuget\\packages\\z440.atl.core\\7.17.0\\z440.atl.core.7.17.0.nupkg.sha512"
   ],
   "logs": []
 }

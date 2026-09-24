@@ -167,6 +167,31 @@
         "runtime": {
           "lib/net6.0/SQLitePCLRaw.provider.e_sqlite3.dll": {}
         }
+      },
+      "Ude.NetStandard/1.2.0": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/Ude.NetStandard.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/Ude.NetStandard.dll": {}
+        }
+      },
+      "z440.atl.core/7.17.0": {
+        "type": "package",
+        "dependencies": {
+          "Ude.NetStandard": "1.2.0"
+        },
+        "compile": {
+          "lib/net6.0/ATL.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/ATL.dll": {
+            "related": ".xml"
+          }
+        }
       }
     }
   },
@@ -288,11 +313,43 @@
         "sqlitepclraw.provider.e_sqlite3.2.1.12.nupkg.sha512",
         "sqlitepclraw.provider.e_sqlite3.nuspec"
       ]
+    },
+    "Ude.NetStandard/1.2.0": {
+      "sha512": "zRWpPAxBg3lNdm4UiKixTe+DFPoNid9CILggTCy/0WR2WKETe17kTWhiiIpLB2k5IEgnvA0QLfKlvd6Tvu0pzA==",
+      "type": "package",
+      "path": "ude.netstandard/1.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "COPYING",
+        "lib/net35/Ude.NetStandard.dll",
+        "lib/net45/Ude.NetStandard.dll",
+        "lib/netstandard1.0/Ude.NetStandard.dll",
+        "lib/netstandard1.6/Ude.NetStandard.dll",
+        "lib/netstandard2.0/Ude.NetStandard.dll",
+        "ude.netstandard.1.2.0.nupkg.sha512",
+        "ude.netstandard.nuspec"
+      ]
+    },
+    "z440.atl.core/7.17.0": {
+      "sha512": "7Uoh61E1W+WfVhw15OFFjl2BMfUABoLNe5DrhKwHWoXfIvC44Rq942LXoAvBf6YEvJRul6tvrvX0nwDxDUQfvw==",
+      "type": "package",
+      "path": "z440.atl.core/7.17.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "lib/net6.0/ATL.dll",
+        "lib/net6.0/ATL.xml",
+        "z440.atl.core.7.17.0.nupkg.sha512",
+        "z440.atl.core.nuspec"
+      ]
     }
   },
   "projectFileDependencyGroups": {
     "net10.0": [
-      "Microsoft.Data.Sqlite >= 10.0.12"
+      "Microsoft.Data.Sqlite >= 10.0.12",
+      "z440.atl.core >= 7.17.0"
     ]
   },
   "packageFolders": {
@@ -302,11 +359,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\Projects\\MusicPlayerApplication\\Backend\\Backend.csproj",
+      "projectUniqueName": "E:\\Projects\\MusicPlayerApplication\\backend\\Backend.csproj",
       "projectName": "Backend",
-      "projectPath": "E:\\Projects\\MusicPlayerApplication\\Backend\\Backend.csproj",
+      "projectPath": "E:\\Projects\\MusicPlayerApplication\\backend\\Backend.csproj",
       "packagesPath": "C:\\Users\\Oscar\\.nuget\\packages\\",
-      "outputPath": "E:\\Projects\\MusicPlayerApplication\\Backend\\obj\\",
+      "outputPath": "E:\\Projects\\MusicPlayerApplication\\backend\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -350,6 +407,10 @@
           "Microsoft.Data.Sqlite": {
             "target": "Package",
             "version": "[10.0.12, )"
+          },
+          "z440.atl.core": {
+            "target": "Package",
+            "version": "[7.17.0, )"
           }
         },
         "imports": [
