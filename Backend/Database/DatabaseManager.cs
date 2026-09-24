@@ -1,4 +1,5 @@
 using Microsoft.Data.Sqlite;
+using Microsoft.VisualBasic;
 using MusicPlayerApp;
 
 namespace Database
@@ -93,7 +94,21 @@ namespace Database
                 VALUES (@file_path)
                 """,
                 (command, track) =>
-                    command.Parameters.AddWithValue("file_path", track.FilePath);
+                    command.Parameters.AddWithValue("file_path", track.FilePath)
+            );
+        }
+
+        public static List<Track> GetTracks()
+        {
+            return ReadToList(
+                """
+                SELECT * FROM tracks
+                ORDER BY track_id ASC
+                """,
+                reader => new Track(
+                    reader.GetInt32(reader.GetOrdinal("track_id")),
+                    reader.GetString(reader.GetOrdinal("file_path"))
+                )
             );
         }
 
@@ -101,8 +116,7 @@ namespace Database
         {
             return ReadToList(
                 """
-                SELECT * FROM tracks
-                RETURNING file_path
+                SELECT file_path FROM tracks
                 """,
                 reader => 
                     reader.GetString(reader.GetOrdinal("file_path"))

@@ -1,3 +1,5 @@
+using Database;
+
 namespace MusicPlayerApp
 {
     public static class Library
@@ -42,7 +44,7 @@ namespace MusicPlayerApp
                 string[] validFilePaths = GetValidFilePaths(filePaths);
 
                 // Get file paths already in database
-                List<string> filePathsInDatabase = new List<string>(); // TODO: Implement
+                List<string> filePathsInDatabase = DatabaseManager.GetFilePaths();
 
                 // Create track objects
                 List<Track> newTracks = new List<Track>(validFilePaths.Length);
@@ -53,6 +55,8 @@ namespace MusicPlayerApp
                         continue;
                     newTracks.Add(new Track(0, filePath));
                 }
+
+                DatabaseManager.AddTracks(newTracks);
 
                 // TODO: Search for new albums via Track metadata
                 
