@@ -1,12 +1,12 @@
 using Microsoft.Data.Sqlite;
-using Microsoft.VisualBasic;
 using MusicPlayerApp;
 
 namespace Database
 {
     public static class DatabaseManager
     {
-        private static string connectionString = "DataSource=Database/library_database.db"; 
+        private static string databasePath = "Database/library_database.db";
+        private static string connectionString = $"DataSource={databasePath}"; 
         private static bool isDatabaseInitilized = false;
 
         private static SqliteConnection GetConnection()
@@ -96,6 +96,10 @@ namespace Database
                 (command, track) =>
                     command.Parameters.AddWithValue("file_path", track.FilePath)
             );
+
+            // This assumes all tracks were added without problems.
+            // TODO: Add system to account for failed tracks
+            Console.WriteLine($"Added {tracks.Count} tracks to library");
         }
 
         public static List<Track> GetTracks()
