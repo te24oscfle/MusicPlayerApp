@@ -15,45 +15,98 @@ namespace Database
             return connection;
         } 
 
+        private static void WriteFromValue(string sqlCommand, Action<SqliteCommand> configure)
+        {
+             if (!isDatabaseInitilized)
+                throw new Exception("Database must be initialized before this function can be called");
+            
+            using SqliteConnection connection = GetConnection();
+            using SqliteCommand command = new SqliteCommand(sqlCommand, connection);
+
+            configure(command);
+
+            command.ExecuteNonQuery();
+        }
+
+        private static void WriteFromList<T>(List<T> list,string sqlCommand, Action<SqliteCommand, T> configure)
+        {
+            if (!isDatabaseInitilized)
+                throw new Exception("Database must be initialized before this function can be called");
+            
+            using SqliteConnection connection = GetConnection();
+            using SqliteCommand command = new SqliteCommand(sqlCommand, connection);
+            
+            foreach(T item in list)
+            {
+                command.Parameters.Clear();
+                configure(command, item);
+                command.ExecuteNonQuery();
+            }
+        }
+
+        private static List<T> ReadToList<T>(string sqlCommand, Func<SqliteDataReader, T> mapFunction)
+        {
+            if (!isDatabaseInitilized)
+                throw new Exception("Database must be initialized before this function can be called");
+            
+            using SqliteConnection connection = GetConnection();
+            using SqliteCommand command = new SqliteCommand(sqlCommand, connection);
+            using SqliteDataReader reader = command.ExecuteReader();
+
+            List<T> list = new List<T>();
+            while(reader.Read())
+                list.Add(mapFunction(reader));
+
+            return list;
+        }
+
         public static void InitilizeDatabase()
         {
             if (isDatabaseInitilized)
                 return;
-            
-            List<SqliteCommand> commands = new List<SqliteCommand>();
 
             using SqliteConnection connection = GetConnection();
-
-            SqliteCommand createTrackTableCommand = new SqliteCommand(
+            List<SqliteCommand> commands = new List<SqliteCommand>
+            {
+                new SqliteCommand(
                 """
                 CREATE TABLE IF NOT EXISTS tracks (
                     track_id INTEGER PRIMARY KEY,
                     file_path TEXT NOT NULL,
                     release_id INTEGER
                 )
-                """, connection);
-            commands.Add(createTrackTableCommand);
+                """, connection)
+            };
 
             foreach(SqliteCommand command in commands )
-            {
                 command.ExecuteNonQuery();
-            }
 
             isDatabaseInitilized = true;
         }
 
+        public static void AddTracks(List<Track> tracks)
+        {
+            WriteFromList(
+                tracks,
+                """
+                INSERT INTO tracks (file_path)
+                VALUES (@file_path)
+                """,
+                (command, track) =>
+                    command.Parameters.AddWithValue("file_path", track.FilePath);
+            );
+        }
+
         public static List<string> GetFilePaths()
         {
-            if (!isDatabaseInitilized)
-                throw new Exception("Database must be initialized before this function can be called");
-            
-            using SqliteConnection connection = GetConnection();
-
-            SqliteCommand command = new SqliteCommand( // TODO: Select all tracks and grab only the filePaths
+            return ReadToList(
                 """
                 SELECT * FROM tracks
-
-                """, connection);
+                RETURNING file_path
+                """,
+                reader => 
+                    reader.GetString(reader.GetOrdinal("file_path"))
+            );
         }
     }    
 }
