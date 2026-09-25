@@ -56,15 +56,29 @@ namespace MusicPlayerApp
                     newTracks.Add(new Track(filePath));
                 }
 
-
-                foreach (Track track in newTracks)
+                // Find new albums
+                List<string> albumTitles = DatabaseManager.GetAlbumTitles();
+                List<string> newAlbumTitles = new List<string>();
+                foreach(Track track in newTracks)
                 {
-                    Console.WriteLine(track.Metadata.Title, track.FilePath);
+                    if (albumTitles.Contains(track.Metadata.Album))
+                        // TODO: Album already exists, add track to album
+                        continue;
+                    newAlbumTitles.Add(track.Metadata.Album);
                 }
+
+                // Create new albums
+                List<Album> newAlbums = new List<Album>();
+                foreach(string albumTitle in newAlbumTitles)
+                {
+                    List<Track> albumTracks = newTracks.Where(
+                        track => 
+                            track.Metadata.Album == albumTitle)
+                    .ToList();
+                }
+                
                 DatabaseManager.AddTracks(newTracks);
 
-                // TODO: Search for new albums via Track metadata
-                
                 // TODO: Insert tracks into database
             };
         }

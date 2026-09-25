@@ -207,5 +207,16 @@ namespace Database
                     reader.GetString(reader.GetOrdinal("file_path"))
             );
         }
+
+        public static List<string> GetAlbumTitles()
+        {
+            return ReadToList(
+                """
+                SELECT title FROM albums
+                """,
+                reader =>
+                    reader.GetString(reader.GetOrdinal("title"))
+                );            
+        }
     }    
 }

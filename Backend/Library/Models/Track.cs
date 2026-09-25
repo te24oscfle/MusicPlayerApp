@@ -8,8 +8,8 @@ namespace MusicPlayerApp
         public string Artist { get; }
         public string Album { get; }
         public string AlbumArtist { get; }
-        public int? TrackNumber { get; }
-        public int? DiscNumber { get; }
+        public int TrackNumber { get; }
+        public int DiscNumber { get; }
         public int DurationSeconds { get; }
         public DateTime? Date { get; }
         public string Genre { get; }
@@ -19,8 +19,8 @@ namespace MusicPlayerApp
             string artist,
             string album,
             string albumArtist,
-            int? trackNumber,
-            int? discNumber,
+            int trackNumber,
+            int discNumber,
             int durationSeconds,
             DateTime? date,
             string genre
@@ -41,8 +41,8 @@ namespace MusicPlayerApp
                 atlTrack.Artist,
                 atlTrack.Album,
                 atlTrack.AlbumArtist,
-                atlTrack.TrackNumber,
-                atlTrack.DiscNumber,
+                atlTrack.TrackNumber ?? 0,
+                atlTrack.DiscNumber ?? 1,
                 atlTrack.Duration,
                 atlTrack.Date,
                 atlTrack.Genre
@@ -70,5 +70,13 @@ namespace MusicPlayerApp
 
         public Track(int trackId, string filePath) 
             : this(trackId, filePath, 0, new TrackMetadata(new ATL.Track(filePath))) {}
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is not Track track)
+                return false;
+
+            return TrackId == track.TrackId;
+        }
     }
 }
