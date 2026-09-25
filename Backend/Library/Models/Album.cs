@@ -2,15 +2,44 @@ namespace MusicPlayerApp
 {
     public class Album
     {
+        public int AlbumId;
         public string Title;
         public string Artist;
         public Dictionary<int, List<Track>> Discs;
 
-        public Album(string title, string artist, Dictionary<int, List<Track>> discs)
+        public Album(int albumId, string title, string artist, Dictionary<int, List<Track>> discs)
         {
+            AlbumId = albumId;
             Title = title;
             Artist = artist;
             Discs = discs;
+        }
+        public Album(int albumId, string title, string artist)
+            : this(albumId, title, artist, new Dictionary<int, List<Track>>()) {}
+        public Album(string title, string artist)
+            : this(0, title, artist, new Dictionary<int, List<Track>>()) {}
+
+        public void AddTrack(Track track)
+        {
+            // Check if disc exists
+            if(!Discs.ContainsKey(track.Metadata.DiscNumber))
+            {
+                // It doesn't, create it
+                Discs.Add(track.Metadata.DiscNumber, new List<Track>());
+            }
+
+            // Prevent duplicate tracks
+            List<Track> disc = Discs[track.Metadata.DiscNumber];
+            if (disc.Contains(track))
+                return;
+            
+            // Add track to disc
+            disc.Add(track);
+
+            // Sort the disc
+            disc.Sort((a, b) =>
+                a.Metadata.TrackNumber.CompareTo(b.Metadata.TrackNumber)
+            );
         }
 
         public void AddTracks(List<Track> tracks)

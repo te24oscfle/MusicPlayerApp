@@ -76,7 +76,12 @@ namespace MusicPlayerApp
             if (obj is not Track track)
                 return false;
 
-            return TrackId == track.TrackId;
+            return FilePath == track.FilePath;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(FilePath);
         }
     }
 }

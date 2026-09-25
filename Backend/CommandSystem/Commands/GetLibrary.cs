@@ -25,7 +25,7 @@ namespace CommandSystem
                 TrackMetadata metadata = track.Metadata;
                 Console.WriteLine($"{track.TrackId}. {metadata.Title}");
                 Console.WriteLine($"\tTrack ID: {track.TrackId}");
-                Console.WriteLine($"\tTrack ID: {track.AlbumId}");
+                Console.WriteLine($"\tAlbum ID: {track.AlbumId}");
                 Console.WriteLine($"\tFile Path: {track.FilePath}");
                 Console.Write("\n");
                 Console.WriteLine($"\tTitle: {metadata.Title}");

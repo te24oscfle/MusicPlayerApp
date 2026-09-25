@@ -64,6 +64,10 @@ namespace MusicPlayerApp
                     if (albumTitles.Contains(track.Metadata.Album))
                         // TODO: Album already exists, add track to album
                         continue;
+                    
+                    if (newAlbumTitles.Contains(track.Metadata.Album))
+                        continue;
+                    
                     newAlbumTitles.Add(track.Metadata.Album);
                 }
 
@@ -75,9 +79,37 @@ namespace MusicPlayerApp
                         track => 
                             track.Metadata.Album == albumTitle)
                     .ToList();
+                    
+                    string albumArtist = albumTracks.FirstOrDefault()!.Metadata.AlbumArtist;
+                    Album album = new Album(albumTitle, albumArtist);
+                    album.AddTracks(albumTracks);
+
+                    newAlbums.Add(album);
                 }
                 
-                DatabaseManager.AddTracks(newTracks);
+                foreach(Album album in newAlbums)
+                {
+                    Console.WriteLine("============================================");
+                    Console.Write("\n");
+                    Console.WriteLine($"{album.Title} - {album.Artist}");
+                    Console.WriteLine($"{album.Discs.Count} discs");
+                    Console.Write("\n");
+
+                    foreach(var pair in album.Discs)
+                    {
+                        Console.WriteLine($"Disc {pair.Key}");
+                        foreach(Track track in pair.Value)
+                        {
+                            Console.WriteLine($"\t{track.Metadata.TrackNumber}. {track.Metadata.Title}");
+                        }
+                        Console.Write("\n");
+                    }
+                    Console.Write("\n");
+
+                    DatabaseManager.AddAlbum(album);
+                }
+
+                
 
                 // TODO: Insert tracks into database
             };

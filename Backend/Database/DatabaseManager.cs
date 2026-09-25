@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Microsoft.Data.Sqlite;
 using MusicPlayerApp;
 
@@ -45,6 +46,22 @@ namespace Database
             }
         }
 
+        private static T? ReadValue<T>(string sqlCommand, Action<SqliteCommand> configure, Func<SqliteDataReader, T> mapFunction)
+        {
+            if (!isDatabaseInitilized)
+                throw new Exception("Database must be initialized before this function can be called");
+            
+            using SqliteConnection connection = GetConnection();
+            using SqliteCommand command = new SqliteCommand(sqlCommand, connection);
+            
+            configure(command);
+
+            using SqliteDataReader reader = command.ExecuteReader();
+            reader.Read();
+
+            return mapFunction(reader);
+        }
+
         private static List<T> ReadToList<T>(string sqlCommand, Func<SqliteDataReader, T> mapFunction)
         {
             if (!isDatabaseInitilized)
@@ -66,7 +83,7 @@ namespace Database
             TrackMetadata metadata = track.Metadata;
 
             command.Parameters.AddWithValue("file_path", track.FilePath);
-            command.Parameters.AddWithValue("album_id", 0); // TODO: Implement
+            command.Parameters.AddWithValue("album_id", track.AlbumId);
             
             command.Parameters.AddWithValue("title", metadata.Title);
             command.Parameters.AddWithValue("artist", metadata.Artist);
@@ -148,6 +165,7 @@ namespace Database
 
         public static void AddTracks(List<Track> tracks)
         {
+            Console.WriteLine($"Adding {tracks.Count} tracks");
             WriteFromList(
                 tracks,
                 """
@@ -186,6 +204,39 @@ namespace Database
             Console.WriteLine($"Added {tracks.Count} tracks to library");
         }
 
+        public static void AddAlbum(Album album)
+        {
+            // TODO: Check if album already exists
+            
+            // Create the album
+            WriteFromValue(
+                """
+                INSERT INTO albums (album_title, album_artist)
+                VALUES (@album_title, @album_artist)
+                """,
+                command =>
+                {
+                    command.Parameters.AddWithValue("album_title", album.Title);
+                    command.Parameters.AddWithValue("album_artist", album.Artist);
+                }
+            );
+
+            // TODO: Get the albumId
+            int albumId = GetAlbumIdFromAlbum(album);
+            Console.WriteLine(albumId);
+
+            // Add tracks
+            foreach(var pair in album.Discs)
+            {
+                foreach(Track track in pair.Value)
+                {
+                    track.AlbumId = albumId;
+                    Console.WriteLine(track.AlbumId);
+                }
+                AddTracks(pair.Value);
+            }
+        }
+
         public static List<Track> GetTracks()
         {
             return ReadToList(
@@ -212,11 +263,29 @@ namespace Database
         {
             return ReadToList(
                 """
-                SELECT title FROM albums
+                SELECT album_title FROM albums
                 """,
                 reader =>
-                    reader.GetString(reader.GetOrdinal("title"))
+                    reader.GetString(reader.GetOrdinal("album_title"))
                 );            
+        }
+
+        public static int GetAlbumIdFromAlbum(Album album)
+        {
+            return ReadValue(
+                """
+                SELECT album_id FROM albums
+                WHERE album_title = @album_title
+                AND album_artist = @album_artist
+                """,
+                command =>
+                {
+                    command.Parameters.AddWithValue("@album_title", album.Title);
+                    command.Parameters.AddWithValue("@album_artist", album.Artist);
+                },
+                reader =>
+                    reader.GetInt32(reader.GetOrdinal("album_id"))
+            );
         }
     }    
 }
