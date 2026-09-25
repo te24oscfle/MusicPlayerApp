@@ -54,13 +54,21 @@ namespace MusicPlayerApp
     {
         public int TrackId;
         public string FilePath;
+        public int AlbumId;
         public TrackMetadata Metadata;
 
-        public Track(int trackId, string filePath)
+        public Track(int trackId, string filePath, int albumId, TrackMetadata metadata)
         {
             TrackId = trackId;
             FilePath = filePath;
-            Metadata = new TrackMetadata(new ATL.Track(filePath));
+            AlbumId = albumId;
+            Metadata = metadata;
         }
+
+        public Track(string filePath) 
+            : this(0, filePath, 0, new TrackMetadata(new ATL.Track(filePath))) {}
+
+        public Track(int trackId, string filePath) 
+            : this(trackId, filePath, 0, new TrackMetadata(new ATL.Track(filePath))) {}
     }
 }

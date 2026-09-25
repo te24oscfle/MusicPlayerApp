@@ -53,9 +53,14 @@ namespace MusicPlayerApp
                 {
                     if (filePathsInDatabase.Contains(filePath))
                         continue;
-                    newTracks.Add(new Track(0, filePath));
+                    newTracks.Add(new Track(filePath));
                 }
 
+
+                foreach (Track track in newTracks)
+                {
+                    Console.WriteLine(track.Metadata.Title, track.FilePath);
+                }
                 DatabaseManager.AddTracks(newTracks);
 
                 // TODO: Search for new albums via Track metadata
