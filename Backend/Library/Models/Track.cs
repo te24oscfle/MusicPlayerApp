@@ -1,5 +1,3 @@
-using System.Reflection.Metadata.Ecma335;
-
 namespace MusicPlayerApp
 {
     public class TrackMetadata
@@ -71,6 +69,13 @@ namespace MusicPlayerApp
         public Track(int trackId, string filePath) 
             : this(trackId, filePath, 0, new TrackMetadata(new ATL.Track(filePath))) {}
 
+        public string GetAlbumKey()
+        {
+            string albumTitle = Metadata.Album ?? "__unknown__";
+            string albumArtist = Metadata.AlbumArtist ?? Metadata.Artist ?? "__unknown__";
+            return albumTitle + albumArtist;
+        }
+        
         public override bool Equals(object? obj)
         {
             if (obj is not Track track)

@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using Microsoft.Data.Sqlite;
 using MusicPlayerApp;
 
@@ -259,15 +258,19 @@ namespace Database
             );
         }
 
-        public static List<string> GetAlbumTitles()
+        // TODO: Change thid to GetAlbumKeys
+        public static List<string> GetAlbumKeys()
         {
             return ReadToList(
                 """
-                SELECT album_title FROM albums
+                SELECT album_title, album_artist FROM albums
                 """,
                 reader =>
-                    reader.GetString(reader.GetOrdinal("album_title"))
-                );            
+                {
+                    string title = reader.GetString(reader.GetOrdinal("album_title")) ?? "__unknown__";
+                    string artist = reader.GetString(reader.GetOrdinal("album_artist")) ?? "__unknown__";
+                    return title + artist;
+                });            
         }
 
         public static int GetAlbumIdFromAlbum(Album album)

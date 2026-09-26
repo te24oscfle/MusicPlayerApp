@@ -57,30 +57,33 @@ namespace MusicPlayerApp
                 }
 
                 // Find new albums
-                List<string> albumTitles = DatabaseManager.GetAlbumTitles();
-                List<string> newAlbumTitles = new List<string>();
+                List<string> albumKeys = DatabaseManager.GetAlbumKeys();
+                List<string> newAlbumKeys = new List<string>();
                 foreach(Track track in newTracks)
                 {
-                    if (albumTitles.Contains(track.Metadata.Album))
+                    string albumKey = track.GetAlbumKey();
+                    if (albumKeys.Contains(albumKey))
                         // TODO: Album already exists, add track to album
                         continue;
                     
-                    if (newAlbumTitles.Contains(track.Metadata.Album))
+                    if (newAlbumKeys.Contains(albumKey))
                         continue;
                     
-                    newAlbumTitles.Add(track.Metadata.Album);
+                    Console.WriteLine(albumKey);
+                    newAlbumKeys.Add(albumKey);
                 }
 
                 // Create new albums
                 List<Album> newAlbums = new List<Album>();
-                foreach(string albumTitle in newAlbumTitles)
+                foreach(string albumKey in newAlbumKeys)
                 {
                     List<Track> albumTracks = newTracks.Where(
-                        track => 
-                            track.Metadata.Album == albumTitle)
+                        track =>
+                            track.GetAlbumKey() == albumKey)
                     .ToList();
                     
-                    string albumArtist = albumTracks.FirstOrDefault()!.Metadata.AlbumArtist;
+                    string albumTitle = albumTracks.FirstOrDefault()!.Metadata.Album ?? "__unknown__";
+                    string albumArtist = albumTracks.FirstOrDefault()!.Metadata.AlbumArtist ?? albumTracks.FirstOrDefault()!.Metadata.Artist ?? "__unknown__";
                     Album album = new Album(albumTitle, albumArtist);
                     album.AddTracks(albumTracks);
 
@@ -89,22 +92,22 @@ namespace MusicPlayerApp
                 
                 foreach(Album album in newAlbums)
                 {
-                    Console.WriteLine("============================================");
-                    Console.Write("\n");
-                    Console.WriteLine($"{album.Title} - {album.Artist}");
-                    Console.WriteLine($"{album.Discs.Count} discs");
-                    Console.Write("\n");
+                    // Console.WriteLine("============================================");
+                    // Console.Write("\n");
+                    // Console.WriteLine($"{album.Title} - {album.Artist}");
+                    // Console.WriteLine($"{album.Discs.Count} discs");
+                    // Console.Write("\n");
 
-                    foreach(var pair in album.Discs)
-                    {
-                        Console.WriteLine($"Disc {pair.Key}");
-                        foreach(Track track in pair.Value)
-                        {
-                            Console.WriteLine($"\t{track.Metadata.TrackNumber}. {track.Metadata.Title}");
-                        }
-                        Console.Write("\n");
-                    }
-                    Console.Write("\n");
+                    // foreach(var pair in album.Discs)
+                    // {
+                    //     Console.WriteLine($"Disc {pair.Key}");
+                    //     foreach(Track track in pair.Value)
+                    //     {
+                    //         Console.WriteLine($"\t{track.Metadata.TrackNumber}. {track.Metadata.Title}");
+                    //     }
+                    //     Console.Write("\n");
+                    // }
+                    // Console.Write("\n");
 
                     DatabaseManager.AddAlbum(album);
                 }

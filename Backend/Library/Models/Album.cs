@@ -14,8 +14,10 @@ namespace MusicPlayerApp
             Artist = artist;
             Discs = discs;
         }
+        
         public Album(int albumId, string title, string artist)
             : this(albumId, title, artist, new Dictionary<int, List<Track>>()) {}
+
         public Album(string title, string artist)
             : this(0, title, artist, new Dictionary<int, List<Track>>()) {}
 
