@@ -73,6 +73,7 @@ namespace Database
             return mapFunction(reader);
         }
 
+        // TODO: Add configure lambda function?
         private static List<T> ReadToList<T>(string sqlCommand, Func<SqliteDataReader, T> mapFunction)
         {
             if (!isDatabaseInitilized)
@@ -105,20 +106,20 @@ namespace Database
             command.Parameters.AddWithValue("duration_seconds", metadata.DurationSeconds);
             command.Parameters.AddWithValue("date", metadata.Date.ToString());
             command.Parameters.AddWithValue("genre", metadata.Genre);
+            command.Parameters.AddWithValue("last_modified_utc", metadata.LastModifiedUtc);
         }
 
         private static Track ReadTrack(SqliteDataReader reader)
         {
-            // TODO: Add system which instantiates TrackMetadata from file path if
-            // file has been modified since it was last updated to the database
-            // TODO: Some of these values may be null. Add null check and default values.
-            
-            
-            return new Track(
-                reader.GetInt32(reader.GetOrdinal("track_id")),
-                reader.GetString(reader.GetOrdinal("file_path")),
-                reader.GetInt32(reader.GetOrdinal("album_id")),
-                new TrackMetadata(
+            string filePath = reader.GetString(reader.GetOrdinal("file_path"));            
+            DateTime dbLastModifiedUtc = DateTime.Parse(reader.GetString(reader.GetOrdinal("last_modified_utc")));
+            DateTime fileLastModifiedUtc = File.GetLastWriteTimeUtc(filePath);
+
+            TrackMetadata trackMetadata;
+            bool shouldUpdate = false;
+            if (dbLastModifiedUtc == fileLastModifiedUtc)
+            {
+                trackMetadata = new TrackMetadata(
                     reader.GetString(reader.GetOrdinal("title")),
                     reader.GetString(reader.GetOrdinal("artist")),
                     reader.GetString(reader.GetOrdinal("album")),
@@ -127,9 +128,27 @@ namespace Database
                     reader.GetInt32(reader.GetOrdinal("disc_number")),
                     reader.GetInt16(reader.GetOrdinal("duration_seconds")),
                     DateTime.Parse(reader.GetString(reader.GetOrdinal("date"))),
-                    reader.GetString(reader.GetOrdinal("genre"))
-                )
+                    reader.GetString(reader.GetOrdinal("genre")),
+                    DateTime.Parse(reader.GetString(reader.GetOrdinal("last_modified_utc")))
+                );
+            } 
+            else
+            {
+                trackMetadata = new TrackMetadata(new ATL.Track(filePath));
+                shouldUpdate = true;
+            }
+
+            Track track = new Track(
+                reader.GetInt32(reader.GetOrdinal("track_id")),
+                reader.GetString(reader.GetOrdinal("file_path")),
+                reader.GetInt32(reader.GetOrdinal("album_id")),
+                trackMetadata
             );
+
+            if (shouldUpdate)
+                track.ShouldUpdate = true;
+            
+            return track;
         }
 
         public static void InitilizeDatabase()
@@ -154,7 +173,8 @@ namespace Database
                         disc_number INTEGER,
                         duration_seconds INTEGER,
                         date TEXT NOT NULL,
-                        genre TEXT NOT NULL
+                        genre TEXT NOT NULL,
+                        last_modified_utc TEXT NOT NULL
                     )
                     """, connection),
                 new SqliteCommand(
@@ -178,7 +198,6 @@ namespace Database
 
         public static void AddTracks(List<Track> tracks)
         {
-            Console.WriteLine($"Adding {tracks.Count} tracks");
             List<Track> failedTracks = WriteFromList(
                 tracks,
                 """
@@ -193,7 +212,8 @@ namespace Database
                     disc_number,
                     duration_seconds,
                     date,
-                    genre
+                    genre,
+                    last_modified_utc
                 )
                 VALUES (
                     @file_path,
@@ -206,7 +226,8 @@ namespace Database
                     @disc_number,
                     @duration_seconds,
                     @date,
-                    @genre
+                    @genre,
+                    @last_modified_utc
                 )
                 """,
                 WriteTrack
@@ -225,10 +246,44 @@ namespace Database
             Console.WriteLine($"Added {tracks.Count - failedTracks.Count} tracks to library");
         }
 
+        public static void UpdateTrack(Track track)
+        {
+            WriteFromValue(
+                """
+                UPDATE tracks
+                SET title = @title,
+                    artist = @artist,
+                    album = @album,
+                    album_artist = @album_artist,
+                    track_number = @track_number,
+                    disc_number = @disc_number,
+                    duration_seconds = @duration_seconds,
+                    date = @date,
+                    genre = @genre,
+                    last_modified_utc = @last_modified_utc
+                WHERE track_id = @track_id
+                """,
+                command =>
+                {
+                    TrackMetadata metadata = track.Metadata;
+
+                    command.Parameters.AddWithValue("title", metadata.Title);
+                    command.Parameters.AddWithValue("artist", metadata.Artist);
+                    command.Parameters.AddWithValue("album", metadata.Album);
+                    command.Parameters.AddWithValue("album_artist", metadata.AlbumArtist);
+                    command.Parameters.AddWithValue("track_number", metadata.TrackNumber);
+                    command.Parameters.AddWithValue("disc_number", metadata.DiscNumber);
+                    command.Parameters.AddWithValue("duration_seconds", metadata.DurationSeconds);
+                    command.Parameters.AddWithValue("date", metadata.Date.ToString());
+                    command.Parameters.AddWithValue("genre", metadata.Genre);
+                    command.Parameters.AddWithValue("last_modified_utc", metadata.LastModifiedUtc.ToString());
+                    command.Parameters.AddWithValue("track_id", track.TrackId);
+                }
+            );
+        }
+
         public static void AddAlbum(Album album)
         {
-            // TODO: Check if album already exists
-            
             // Create the album
             WriteFromValue(
                 """
@@ -258,13 +313,29 @@ namespace Database
 
         public static List<Track> GetTracks()
         {
-            return ReadToList(
+            List<Track> tracks = ReadToList(
                 """
                 SELECT * FROM tracks
                 ORDER BY track_id ASC
                 """,
                 ReadTrack
             );
+
+            int updatedTracks = 0;
+            foreach(Track track in tracks)
+            {
+                if (track.ShouldUpdate)
+                {
+                    UpdateTrack(track);
+                    track.ShouldUpdate = false;
+                    updatedTracks++;
+                }
+            }
+
+            if (updatedTracks > 0)
+                Console.WriteLine($"Updated {updatedTracks} tracks to the database");
+
+            return tracks;
         }
 
         public static List<string> GetFilePaths()

@@ -11,6 +11,7 @@ namespace MusicPlayerApp
         public int DurationSeconds { get; }
         public DateTime Date { get; }
         public string Genre { get; }
+        public DateTime LastModifiedUtc { get; }
 
         public TrackMetadata(
             string title,
@@ -21,7 +22,8 @@ namespace MusicPlayerApp
             int discNumber,
             int durationSeconds,
             DateTime date,
-            string genre
+            string genre,
+            DateTime lastModifiedUtc
         )
         {
             Title = title;
@@ -33,6 +35,7 @@ namespace MusicPlayerApp
             DurationSeconds = durationSeconds;
             Date = date;
             Genre = genre;
+            LastModifiedUtc = lastModifiedUtc;
         }
         public TrackMetadata(ATL.Track atlTrack) : this (
                 string.IsNullOrWhiteSpace(atlTrack.Title) ? Path.GetFileNameWithoutExtension(atlTrack.Path) : atlTrack.Title,
@@ -43,9 +46,9 @@ namespace MusicPlayerApp
                 atlTrack.DiscNumber is > 0 ? atlTrack.DiscNumber.Value : 1,
                 atlTrack.Duration,
                 atlTrack.Date ?? new DateTime(0),
-                atlTrack.Genre
+                atlTrack.Genre,
+                File.GetLastWriteTimeUtc(atlTrack.Path)
             ) {}
-
     };
     
     public class Track
@@ -54,6 +57,7 @@ namespace MusicPlayerApp
         public string FilePath;
         public int AlbumId;
         public TrackMetadata Metadata;
+        public bool ShouldUpdate = false;
 
         public Track(int trackId, string filePath, int albumId, TrackMetadata metadata)
         {
