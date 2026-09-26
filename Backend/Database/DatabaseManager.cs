@@ -30,7 +30,7 @@ namespace Database
             command.ExecuteNonQuery();
         }
 
-        private static void WriteFromList<T>(List<T> list, string sqlCommand, Action<SqliteCommand, T> configure)
+        private static List<T> WriteFromList<T>(List<T> list, string sqlCommand, Action<SqliteCommand, T> configure)
         {
             if (!isDatabaseInitilized)
                 throw new Exception("Database must be initialized before this function can be called");
@@ -38,12 +38,23 @@ namespace Database
             using SqliteConnection connection = GetConnection();
             using SqliteCommand command = new SqliteCommand(sqlCommand, connection);
             
+            List<T> failedItems = new List<T>();
+
             foreach(T item in list)
             {
-                command.Parameters.Clear();
-                configure(command, item);
-                command.ExecuteNonQuery();
+                try
+                {
+                    command.Parameters.Clear();
+                    configure(command, item);
+                    command.ExecuteNonQuery();
+                } 
+                catch (Exception)
+                {
+                    failedItems.Add(item);
+                }
             }
+
+            return failedItems;
         }
 
         private static T? ReadValue<T>(string sqlCommand, Action<SqliteCommand> configure, Func<SqliteDataReader, T> mapFunction)
@@ -168,7 +179,7 @@ namespace Database
         public static void AddTracks(List<Track> tracks)
         {
             Console.WriteLine($"Adding {tracks.Count} tracks");
-            WriteFromList(
+            List<Track> failedTracks = WriteFromList(
                 tracks,
                 """
                 INSERT INTO tracks (
@@ -201,9 +212,17 @@ namespace Database
                 WriteTrack
             );
 
-            // This assumes all tracks were added without problems.
-            // TODO: Add system to account for failed tracks
-            Console.WriteLine($"Added {tracks.Count} tracks to library");
+            if (failedTracks.Count > 0)
+            {
+                Console.WriteLine($"{failedTracks.Count} track(s) failed to import:");
+                foreach(Track track in failedTracks)
+                {
+                    Console.WriteLine($"\t{track.FilePath}");
+                }
+                Console.Write("\n");
+            }
+
+            Console.WriteLine($"Added {tracks.Count - failedTracks.Count} tracks to library");
         }
 
         public static void AddAlbum(Album album)
