@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using MusicPlayerApp;
 
@@ -222,7 +223,6 @@ namespace Database
 
             // TODO: Get the albumId
             int albumId = GetAlbumIdFromAlbum(album);
-            Console.WriteLine(albumId);
 
             // Add tracks
             foreach(var pair in album.Discs)
@@ -230,7 +230,6 @@ namespace Database
                 foreach(Track track in pair.Value)
                 {
                     track.AlbumId = albumId;
-                    Console.WriteLine(track.AlbumId);
                 }
                 AddTracks(pair.Value);
             }
@@ -269,7 +268,7 @@ namespace Database
                 {
                     string title = reader.GetString(reader.GetOrdinal("album_title")) ?? "__unknown__";
                     string artist = reader.GetString(reader.GetOrdinal("album_artist")) ?? "__unknown__";
-                    return title + artist;
+                    return Library.SerializeAlbumKey(title, artist);
                 });            
         }
 
@@ -289,6 +288,10 @@ namespace Database
                 reader =>
                     reader.GetInt32(reader.GetOrdinal("album_id"))
             );
+        }
+        public static int GetAlbumIdFromAlbum(string albumTitle, string albumArtist)
+        {
+            return GetAlbumIdFromAlbum(new Album(albumTitle, albumArtist));
         }
     }    
 }

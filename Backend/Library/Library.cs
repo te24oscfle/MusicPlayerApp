@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using Database;
 
 namespace MusicPlayerApp
@@ -32,6 +33,27 @@ namespace MusicPlayerApp
                 .ToArray();
         }
         
+        public static string SerializeAlbumKey(Track track)
+        {
+            TrackMetadata metadata = track.Metadata;
+            string albumTitle = metadata.Album ?? "__unknown__";
+            string albumArtist = metadata.AlbumArtist ?? metadata.Artist ?? "__unknown__";
+            return string.Join("///", albumTitle, albumArtist);
+        }
+        public static string SerializeAlbumKey(string? albumTitle, string? albumArtist)
+        {
+            return string.Join("///", albumTitle ?? "__unknown__", albumArtist ?? "__unknown__");
+        }
+
+        public static (string albumTitle, string albumArtist) DeserializeAlbumKey(string albumKey)
+        {
+            string[] parts = albumKey.Split("///");
+            Console.WriteLine(albumKey);
+            string albumTitle = parts[0];
+            string albumArtist = parts[1];
+            return (albumTitle, albumArtist);
+        }
+
         public static void ImportFromPath(string path)
         {
             if (!Path.Exists(path))
@@ -61,15 +83,20 @@ namespace MusicPlayerApp
                 List<string> newAlbumKeys = new List<string>();
                 foreach(Track track in newTracks)
                 {
-                    string albumKey = track.GetAlbumKey();
+                    string albumKey = SerializeAlbumKey(track);
                     if (albumKeys.Contains(albumKey))
-                        // TODO: Album already exists, add track to album
+                    {
+                        // Album already exists, add track to album
+                        (string albumTitle, string albumArtist) = DeserializeAlbumKey(albumKey);
+                        int albumId = DatabaseManager.GetAlbumIdFromAlbum(albumTitle, albumArtist);
+                        track.AlbumId = albumId;
                         continue;
-                    
+                    }
+
+                    // Already found this album                    
                     if (newAlbumKeys.Contains(albumKey))
                         continue;
                     
-                    Console.WriteLine(albumKey);
                     newAlbumKeys.Add(albumKey);
                 }
 
@@ -79,11 +106,10 @@ namespace MusicPlayerApp
                 {
                     List<Track> albumTracks = newTracks.Where(
                         track =>
-                            track.GetAlbumKey() == albumKey)
+                            SerializeAlbumKey(track) == albumKey)
                     .ToList();
                     
-                    string albumTitle = albumTracks.FirstOrDefault()!.Metadata.Album ?? "__unknown__";
-                    string albumArtist = albumTracks.FirstOrDefault()!.Metadata.AlbumArtist ?? albumTracks.FirstOrDefault()!.Metadata.Artist ?? "__unknown__";
+                    (string albumTitle, string albumArtist) = DeserializeAlbumKey(albumKey);
                     Album album = new Album(albumTitle, albumArtist);
                     album.AddTracks(albumTracks);
 
@@ -112,9 +138,12 @@ namespace MusicPlayerApp
                     DatabaseManager.AddAlbum(album);
                 }
 
-                
-
-                // TODO: Insert tracks into database
+                DatabaseManager.AddTracks(
+                    newTracks.Where(
+                        track => 
+                            track.AlbumId == 0)
+                        .ToList()
+                    );
             };
         }
     }
