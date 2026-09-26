@@ -9,7 +9,7 @@ namespace MusicPlayerApp
         public int TrackNumber { get; }
         public int DiscNumber { get; }
         public int DurationSeconds { get; }
-        public DateTime? Date { get; }
+        public DateTime Date { get; }
         public string Genre { get; }
 
         public TrackMetadata(
@@ -20,7 +20,7 @@ namespace MusicPlayerApp
             int trackNumber,
             int discNumber,
             int durationSeconds,
-            DateTime? date,
+            DateTime date,
             string genre
         )
         {
@@ -35,14 +35,14 @@ namespace MusicPlayerApp
             Genre = genre;
         }
         public TrackMetadata(ATL.Track atlTrack) : this (
-                atlTrack.Title,
-                atlTrack.Artist,
-                atlTrack.Album,
-                atlTrack.AlbumArtist,
+                string.IsNullOrWhiteSpace(atlTrack.Title) ? Path.GetFileNameWithoutExtension(atlTrack.Path) : atlTrack.Title,
+                string.IsNullOrWhiteSpace(atlTrack.Artist) ? "__unknown__" : atlTrack.Artist,
+                string.IsNullOrWhiteSpace(atlTrack.Album) ? "__unknown__" : atlTrack.Album,
+                string.IsNullOrWhiteSpace(atlTrack.AlbumArtist) ? "__unknown__" : atlTrack.AlbumArtist,
                 atlTrack.TrackNumber ?? 0,
-                atlTrack.DiscNumber ?? 1,
+                atlTrack.DiscNumber is > 0 ? atlTrack.DiscNumber.Value : 1,
                 atlTrack.Duration,
-                atlTrack.Date,
+                atlTrack.Date ?? new DateTime(0),
                 atlTrack.Genre
             ) {}
 
@@ -68,13 +68,6 @@ namespace MusicPlayerApp
 
         public Track(int trackId, string filePath) 
             : this(trackId, filePath, 0, new TrackMetadata(new ATL.Track(filePath))) {}
-
-        public string GetAlbumKey()
-        {
-            string albumTitle = Metadata.Album ?? "__unknown__";
-            string albumArtist = Metadata.AlbumArtist ?? Metadata.Artist ?? "__unknown__";
-            return albumTitle + albumArtist;
-        }
         
         public override bool Equals(object? obj)
         {

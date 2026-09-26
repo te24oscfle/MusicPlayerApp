@@ -101,6 +101,8 @@ namespace Database
             // TODO: Add system which instantiates TrackMetadata from file path if
             // file has been modified since it was last updated to the database
             // TODO: Some of these values may be null. Add null check and default values.
+            
+            
             return new Track(
                 reader.GetInt32(reader.GetOrdinal("track_id")),
                 reader.GetString(reader.GetOrdinal("file_path")),
@@ -110,8 +112,8 @@ namespace Database
                     reader.GetString(reader.GetOrdinal("artist")),
                     reader.GetString(reader.GetOrdinal("album")),
                     reader.GetString(reader.GetOrdinal("album_artist")),
-                    reader.GetInt16(reader.GetOrdinal("track_number")),
-                    reader.GetInt16(reader.GetOrdinal("disc_number")),
+                    reader.GetInt32(reader.GetOrdinal("track_number")),
+                    reader.GetInt32(reader.GetOrdinal("disc_number")),
                     reader.GetInt16(reader.GetOrdinal("duration_seconds")),
                     DateTime.Parse(reader.GetString(reader.GetOrdinal("date"))),
                     reader.GetString(reader.GetOrdinal("genre"))
