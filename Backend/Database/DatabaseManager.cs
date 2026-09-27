@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+using System.Globalization;
 using Microsoft.Data.Sqlite;
 using MusicPlayerApp;
 
@@ -48,8 +48,9 @@ namespace Database
                     configure(command, item);
                     command.ExecuteNonQuery();
                 } 
-                catch (Exception)
+                catch (Exception e)
                 {
+                    Console.WriteLine(e);
                     failedItems.Add(item);
                 }
             }
@@ -68,19 +69,23 @@ namespace Database
             configure(command);
 
             using SqliteDataReader reader = command.ExecuteReader();
-            reader.Read();
+            if (!reader.Read())
+            {
+                return default;
+            }
 
             return mapFunction(reader);
         }
 
-        // TODO: Add configure lambda function?
-        private static List<T> ReadToList<T>(string sqlCommand, Func<SqliteDataReader, T> mapFunction)
+        private static List<T> ReadToList<T>(string sqlCommand, Func<SqliteDataReader, T> mapFunction, Action<SqliteCommand>? configure=null)
         {
             if (!isDatabaseInitilized)
                 throw new Exception("Database must be initialized before this function can be called");
             
             using SqliteConnection connection = GetConnection();
             using SqliteCommand command = new SqliteCommand(sqlCommand, connection);
+            configure?.Invoke(command);
+            
             using SqliteDataReader reader = command.ExecuteReader();
 
             List<T> list = new List<T>();
@@ -104,20 +109,30 @@ namespace Database
             command.Parameters.AddWithValue("track_number", metadata.TrackNumber);
             command.Parameters.AddWithValue("disc_number", metadata.DiscNumber);
             command.Parameters.AddWithValue("duration_seconds", metadata.DurationSeconds);
-            command.Parameters.AddWithValue("date", metadata.Date.ToString());
+            command.Parameters.AddWithValue("date", metadata.Date.ToString("O"));
             command.Parameters.AddWithValue("genre", metadata.Genre);
-            command.Parameters.AddWithValue("last_modified_utc", metadata.LastModifiedUtc);
+            command.Parameters.AddWithValue("last_modified_utc", metadata.LastModifiedUtc.ToString("O"));
         }
 
         private static Track ReadTrack(SqliteDataReader reader)
         {
             string filePath = reader.GetString(reader.GetOrdinal("file_path"));            
-            DateTime dbLastModifiedUtc = DateTime.Parse(reader.GetString(reader.GetOrdinal("last_modified_utc")));
+            DateTime dbLastModifiedUtc = DateTime.Parse(
+                reader.GetString(reader.GetOrdinal("last_modified_utc")),
+                null,
+                DateTimeStyles.RoundtripKind
+            );
             DateTime fileLastModifiedUtc = File.GetLastWriteTimeUtc(filePath);
 
             TrackMetadata trackMetadata;
             bool shouldUpdate = false;
-            if (dbLastModifiedUtc == fileLastModifiedUtc)
+
+            if (dbLastModifiedUtc != fileLastModifiedUtc)
+            {
+                trackMetadata = new TrackMetadata(new ATL.Track(filePath));
+                shouldUpdate = true;
+            }
+            else
             {
                 trackMetadata = new TrackMetadata(
                     reader.GetString(reader.GetOrdinal("title")),
@@ -129,19 +144,14 @@ namespace Database
                     reader.GetInt16(reader.GetOrdinal("duration_seconds")),
                     DateTime.Parse(reader.GetString(reader.GetOrdinal("date"))),
                     reader.GetString(reader.GetOrdinal("genre")),
-                    DateTime.Parse(reader.GetString(reader.GetOrdinal("last_modified_utc")))
+                    fileLastModifiedUtc
                 );
-            } 
-            else
-            {
-                trackMetadata = new TrackMetadata(new ATL.Track(filePath));
-                shouldUpdate = true;
             }
 
             Track track = new Track(
                 reader.GetInt32(reader.GetOrdinal("track_id")),
                 reader.GetString(reader.GetOrdinal("file_path")),
-                reader.GetInt32(reader.GetOrdinal("album_id")),
+                GetAlbumIdFromAlbum(reader.GetString(reader.GetOrdinal("album")), reader.GetString(reader.GetOrdinal("album_artist"))),
                 trackMetadata
             );
 
@@ -153,7 +163,6 @@ namespace Database
 
         public static Album ReadAlbum(SqliteDataReader reader)
         {
-            // TODO: Add ShouldUpdate implementation for albums
             Album album = new Album(
                 reader.GetInt32(reader.GetOrdinal("album_id")),
                 reader.GetString(reader.GetOrdinal("album_title")),
@@ -258,9 +267,12 @@ namespace Database
             Console.WriteLine($"Added {tracks.Count - failedTracks.Count} tracks to library");
         }
 
-        public static void UpdateTrack(Track track)
+        public static void UpdateTracks(List<Track> tracks)
         {
-            WriteFromValue(
+            HashSet<int> albumIds = tracks.Select(track => track.AlbumId).ToHashSet();
+
+            List<Track> failedTracks = WriteFromList(
+                tracks,
                 """
                 UPDATE tracks
                 SET title = @title,
@@ -272,12 +284,23 @@ namespace Database
                     duration_seconds = @duration_seconds,
                     date = @date,
                     genre = @genre,
-                    last_modified_utc = @last_modified_utc
+                    last_modified_utc = @last_modified_utc,
+                    album_id = @album_id
                 WHERE track_id = @track_id
                 """,
-                command =>
+                (command, track) =>
                 {
                     TrackMetadata metadata = track.Metadata;
+                    int newAlbumId = GetAlbumIdFromAlbum(track.Metadata.Album, track.Metadata.AlbumArtist);
+
+                    if (newAlbumId == 0)
+                    {
+                        // This album does not exist yet
+                        // Create new album
+                        newAlbumId = AddAlbum(new Album(track.Metadata.Album, track.Metadata.AlbumArtist));
+                    }
+
+                    Console.WriteLine($"New Album Id: {newAlbumId}");
 
                     command.Parameters.AddWithValue("title", metadata.Title);
                     command.Parameters.AddWithValue("artist", metadata.Artist);
@@ -288,13 +311,83 @@ namespace Database
                     command.Parameters.AddWithValue("duration_seconds", metadata.DurationSeconds);
                     command.Parameters.AddWithValue("date", metadata.Date.ToString());
                     command.Parameters.AddWithValue("genre", metadata.Genre);
-                    command.Parameters.AddWithValue("last_modified_utc", metadata.LastModifiedUtc.ToString());
-                    command.Parameters.AddWithValue("track_id", track.TrackId);
+                    command.Parameters.AddWithValue("last_modified_utc", metadata.LastModifiedUtc.ToString("O"));
+                    command.Parameters.AddWithValue("album_id", newAlbumId);
+                    command.Parameters.AddWithValue("track_id", track.TrackId);  
+
+                    track.AlbumId = newAlbumId;
                 }
             );
+
+            if (failedTracks.Count > 0)
+            {
+                Console.Write("\n");
+                Console.WriteLine("Following tracks failed to update:");
+                foreach (Track track in failedTracks)
+                {
+                    Console.WriteLine($"\t{track.FilePath}");
+                }
+                Console.Write("\n");
+            }
+
+            if (albumIds.Count > 0)
+            {
+                UpdateAlbums(albumIds);
+            }
         }
 
-        public static void AddAlbum(Album album)
+        public static void UpdateAlbums(HashSet<int> albumIds)
+        {
+            List<Track> tracks = GetTracks(false);
+            List<Album> albums = new List<Album>();
+            
+            foreach (int albumId in albumIds)
+            {
+                Album? album = ReadValue(
+                    """
+                    SELECT * FROM albums
+                    WHERE album_id = @album_id
+                    """,
+                    command => command.Parameters.AddWithValue("album_id", albumId),
+                    ReadAlbum
+                );
+                
+                if (album != null)
+                {
+                    albums.Add(album);
+                }
+                    
+            }
+
+            foreach(Album album in albums)
+            {
+                bool hasTracks = ReadValue(
+                    """
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM tracks
+                        WHERE album_id = @album_id
+                    )
+                    """,
+                    command => command.Parameters.AddWithValue("album_id", album.AlbumId),
+                    reader => reader.GetBoolean(0)
+                );
+
+                if (!hasTracks)
+                {
+                    // No tracks in this album, we can delete it
+                    WriteFromValue(
+                        """
+                        DELETE FROM albums
+                        WHERE album_id = @album_id
+                        """,
+                        command => command.Parameters.AddWithValue("album_id", album.AlbumId)
+                    );
+                }
+            }
+        }
+
+        public static int AddAlbum(Album album)
         {
             // Create the album
             WriteFromValue(
@@ -309,7 +402,7 @@ namespace Database
                 }
             );
 
-            // TODO: Get the albumId
+            // Get the albumId
             int albumId = GetAlbumIdFromAlbum(album);
 
             // Add tracks
@@ -321,9 +414,12 @@ namespace Database
                 }
                 AddTracks(pair.Value);
             }
+
+            album.AlbumId = albumId;
+            return albumId;
         }
 
-        public static List<Track> GetTracks()
+        public static List<Track> GetTracks(bool shouldRescan=true)
         {
             List<Track> tracks = ReadToList(
                 """
@@ -333,20 +429,14 @@ namespace Database
                 ReadTrack
             );
 
-            int updatedTracks = 0;
-            foreach(Track track in tracks)
+            if (shouldRescan)
             {
-                if (track.ShouldUpdate)
-                {
-                    UpdateTrack(track);
-                    track.ShouldUpdate = false;
-                    updatedTracks++;
-                }
+                List<Track> tracksToUpdate = tracks.Where(track => track.ShouldUpdate == true).ToList();
+                if (tracksToUpdate.Count > 0)
+                    UpdateTracks(tracksToUpdate);
+                    Console.WriteLine($"Updated {tracksToUpdate.Count} tracks to the database");
             }
-
-            if (updatedTracks > 0)
-                Console.WriteLine($"Updated {updatedTracks} tracks to the database");
-
+            
             return tracks;
         }
 
@@ -385,7 +475,6 @@ namespace Database
             );
         }
 
-        // TODO: Change thid to GetAlbumKeys
         public static List<string> GetAlbumKeys()
         {
             return ReadToList(
@@ -401,7 +490,7 @@ namespace Database
         }
 
         public static int GetAlbumIdFromAlbum(Album album)
-        {
+        {            
             return ReadValue(
                 """
                 SELECT album_id FROM albums
@@ -414,7 +503,7 @@ namespace Database
                     command.Parameters.AddWithValue("@album_artist", album.Artist);
                 },
                 reader =>
-                    reader.GetInt32(reader.GetOrdinal("album_id"))
+                    reader.IsDBNull(reader.GetOrdinal("album_id")) is false ? reader.GetInt32(reader.GetOrdinal("album_id")) : 0
             );
         }
         public static int GetAlbumIdFromAlbum(string albumTitle, string albumArtist)

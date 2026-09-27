@@ -11,6 +11,7 @@ namespace CommandSystem
     {
         public Task Execute(string[] arguments)
         {
+            Library.LoadLibraryFromDatabase();
             HashSet<Album> albums = Library.GetAlbums();
 
             if (albums.Count == 0)
@@ -32,7 +33,7 @@ namespace CommandSystem
                     Console.WriteLine($"Disc {pair.Key}");
                     foreach(Track track in pair.Value)
                     {
-                        Console.WriteLine($"\t{track.Metadata.TrackNumber}. {track.Metadata.Title}\t\t(Track Id: {track.TrackId})");
+                        Console.WriteLine($"\tTrack Id: {track.TrackId}. Track Number: {track.Metadata.TrackNumber}. {track.Metadata.Title}");
                     }
                     Console.Write("\n");
                 }

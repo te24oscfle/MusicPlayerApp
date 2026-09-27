@@ -136,23 +136,6 @@ namespace MusicPlayerApp
                 
                 foreach(Album album in newAlbums)
                 {
-                    // Console.WriteLine("============================================");
-                    // Console.Write("\n");
-                    // Console.WriteLine($"{album.Title} - {album.Artist}");
-                    // Console.WriteLine($"{album.Discs.Count} discs");
-                    // Console.Write("\n");
-
-                    // foreach(var pair in album.Discs)
-                    // {
-                    //     Console.WriteLine($"Disc {pair.Key}");
-                    //     foreach(Track track in pair.Value)
-                    //     {
-                    //         Console.WriteLine($"\t{track.Metadata.TrackNumber}. {track.Metadata.Title}");
-                    //     }
-                    //     Console.Write("\n");
-                    // }
-                    // Console.Write("\n");
-
                     DatabaseManager.AddAlbum(album);
                 }
 
