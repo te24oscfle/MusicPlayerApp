@@ -151,6 +151,17 @@ namespace Database
             return track;
         }
 
+        public static Album ReadAlbum(SqliteDataReader reader)
+        {
+            // TODO: Add ShouldUpdate implementation for albums
+            Album album = new Album(
+                reader.GetString(reader.GetOrdinal("album_title")),
+                reader.GetString(reader.GetOrdinal("album_artist"))
+            );
+
+            return album;
+        }
+
         public static void InitilizeDatabase()
         {
             if (isDatabaseInitilized)
@@ -336,6 +347,24 @@ namespace Database
                 Console.WriteLine($"Updated {updatedTracks} tracks to the database");
 
             return tracks;
+        }
+
+        public static List<Album> GetAlbumsFromTracks(List<Track> tracks)
+        {
+            List<Album> albums = ReadToList(
+                """
+                SELECT * FROM albums
+                ORDER BY album_id ASC
+                """,
+                ReadAlbum
+            );
+
+            foreach(Album album in albums)
+            {
+                album.AddTracks(tracks.Where(track => track.AlbumId == album.AlbumId).ToList());
+            }
+
+            return albums;
         }
 
         public static List<string> GetFilePaths()
