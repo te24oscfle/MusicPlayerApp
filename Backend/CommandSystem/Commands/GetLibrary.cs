@@ -1,4 +1,3 @@
-using Database;
 using MusicPlayerApp;
 
 namespace CommandSystem
@@ -12,31 +11,31 @@ namespace CommandSystem
     {
         public Task Execute(string[] arguments)
         {
-            List<Track> tracks = DatabaseManager.GetTracks();
+            HashSet<Album> albums = Library.GetAlbums();
 
-            if (tracks.Count == 0)
+            if (albums.Count == 0)
             {
                 Console.WriteLine("The library is empty.");
                 return Task.CompletedTask;
             }
 
-            foreach(Track track in tracks)
+            foreach(Album album in albums)
             {
-                TrackMetadata metadata = track.Metadata;
-                Console.WriteLine($"{track.TrackId}. {metadata.Title}");
-                Console.WriteLine($"\tTrack ID: {track.TrackId}");
-                Console.WriteLine($"\tAlbum ID: {track.AlbumId}");
-                Console.WriteLine($"\tFile Path: {track.FilePath}");
+                Console.WriteLine("============================================");
                 Console.Write("\n");
-                Console.WriteLine($"\tTitle: {metadata.Title}");
-                Console.WriteLine($"\tAlbum: {metadata.Album}");
-                Console.WriteLine($"\tAlbum Artist: {metadata.AlbumArtist}");
-                Console.WriteLine($"\tTrack Number: {metadata.TrackNumber}");
-                Console.WriteLine($"\tDisc Number: {metadata.DiscNumber}");
-                Console.WriteLine($"\tDuration: {metadata.DurationSeconds} seconds");
-                Console.WriteLine($"\tDate: {metadata.Date}");
-                Console.WriteLine($"\tGenre: {metadata.Genre}");
+                Console.WriteLine($"{album.AlbumId}. {album.Title} - {album.Artist}");
+                Console.WriteLine($"{album.Discs.Count} discs");
                 Console.Write("\n");
+
+                foreach(var pair in album.Discs)
+                {
+                    Console.WriteLine($"Disc {pair.Key}");
+                    foreach(Track track in pair.Value)
+                    {
+                        Console.WriteLine($"\t{track.Metadata.TrackNumber}. {track.Metadata.Title}\t\t(Track Id: {track.TrackId})");
+                    }
+                    Console.Write("\n");
+                }
                 Console.Write("\n");
             }
 

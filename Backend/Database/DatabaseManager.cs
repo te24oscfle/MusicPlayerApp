@@ -155,6 +155,7 @@ namespace Database
         {
             // TODO: Add ShouldUpdate implementation for albums
             Album album = new Album(
+                reader.GetInt32(reader.GetOrdinal("album_id")),
                 reader.GetString(reader.GetOrdinal("album_title")),
                 reader.GetString(reader.GetOrdinal("album_artist"))
             );
@@ -361,10 +362,16 @@ namespace Database
 
             foreach(Album album in albums)
             {
-                album.AddTracks(tracks.Where(track => track.AlbumId == album.AlbumId).ToList());
+                List<Track> albumTracks = tracks.Where(track => track.AlbumId == album.AlbumId).ToList();
+                album.AddTracks(albumTracks);
             }
 
             return albums;
+        }
+
+        public static List<Album> GetAlbums()
+        {
+            return GetAlbumsFromTracks(GetTracks());
         }
 
         public static List<string> GetFilePaths()

@@ -13,11 +13,17 @@ namespace MusicPlayerApp
 {
     public static class Program
     {
+        static void Initilize()
+        {
+            DatabaseManager.InitilizeDatabase();
+            Library.LoadLibraryFromDatabase();
+        }
+        
         static async Task Main(string[] args)
         {
             Dictionary<string, CommandDef> commands = CommandRegistry.DiscoverCommands(true);
 
-            DatabaseManager.InitilizeDatabase();
+            Initilize();
 
             bool shouldExit = false;
             while(!shouldExit)
@@ -47,7 +53,14 @@ namespace MusicPlayerApp
                     continue;
                 }
 
-                await commandDef.command.Execute(arguments);
+                try
+                {
+                    await commandDef.command.Execute(arguments);
+                } 
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error when executing {commandDef.Metadata.Name}: {e}");
+                }
             }
         }
     }

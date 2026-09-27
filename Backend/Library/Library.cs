@@ -57,7 +57,7 @@ namespace MusicPlayerApp
             return (albumTitle, albumArtist);
         }
 
-        private static void LoadLibraryFromDatabase()
+        public static void LoadLibraryFromDatabase()
         {
             trackCache.Clear();
             albumCache.Clear();
@@ -177,6 +177,16 @@ namespace MusicPlayerApp
         {
             albumCache.TryGetValue(albumId, out Album? album);
             return album;
+        }
+
+        public static HashSet<Album> GetAlbums()
+        {
+            return albumCache.Values.ToHashSet();
+        }
+
+        public static HashSet<Track> GetTracks()
+        {
+            return trackCache.Values.ToHashSet();
         }
     }
 }

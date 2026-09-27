@@ -12,14 +12,7 @@ namespace CommandSystem
         public Task Execute(string[] arguments)
         {
             string directoryPath = string.Join(" ", arguments);
-            try
-            {
-                Library.ImportFromPath(directoryPath);
-            }
-            catch(Exception e)
-            {
-                Console.WriteLine(e.Message);
-            }
+            Library.ImportFromPath(directoryPath);
 
             return Task.CompletedTask;
         }
