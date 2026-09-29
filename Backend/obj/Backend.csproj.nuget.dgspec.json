@@ -52,9 +52,17 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "dependencies": {
+            "LibVLCSharp": {
+              "target": "Package",
+              "version": "[3.10.1, )"
+            },
             "Microsoft.Data.Sqlite": {
               "target": "Package",
               "version": "[10.0.12, )"
+            },
+            "VideoLAN.LibVLC.Windows": {
+              "target": "Package",
+              "version": "[3.0.24, )"
             },
             "z440.atl.core": {
               "target": "Package",
