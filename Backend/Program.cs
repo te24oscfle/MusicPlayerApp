@@ -8,6 +8,7 @@
 
 using CommandSystem;
 using Database;
+using Playback;
 
 namespace MusicPlayerApp
 {
@@ -17,6 +18,7 @@ namespace MusicPlayerApp
         {
             DatabaseManager.InitilizeDatabase();
             Library.LoadLibraryFromDatabase();
+            AudioPlayer.InitilizeAudioPlayer();
         }
         
         static async Task Main(string[] args)
