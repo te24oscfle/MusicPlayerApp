@@ -90,5 +90,15 @@ namespace Playback
         {
             return mediaPlayer.Volume;
         }
+
+        public static void Seek(int positionInSeconds)
+        {
+            mediaPlayer.SeekTo(TimeSpan.FromMilliseconds(positionInSeconds * 1000));
+        }
+
+        public static float GetCurrentPosition()
+        {
+            return mediaPlayer.Position * mediaPlayer.Length/1000;
+        }
     }
 }
