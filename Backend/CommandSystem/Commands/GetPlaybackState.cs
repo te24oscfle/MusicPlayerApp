@@ -6,7 +6,7 @@ namespace CommandSystem
     [Command(
         "getplaybackstate", 
         "Prints out current track, IsPlaying, CurrentPosition, and CurrentVolume", 
-        "pause"
+        "getplaybackstate"
     )]
     public class GetPlaybackState : ICommand
     {
