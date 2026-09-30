@@ -49,7 +49,7 @@ namespace Playback
 
         private static void OnVolumeChanged(object? sender, EventArgs eventArgs)
         {
-            Console.WriteLine("Volume changed");
+           
         }
 
         #endregion
@@ -79,6 +79,16 @@ namespace Playback
         {
             if (mediaPlayer.Media != null)
                 mediaPlayer.Play();
+        }
+
+        public static void SetVolume(int value)
+        {
+            mediaPlayer.Volume = value;
+        }
+
+        public static int GetVolume()
+        {
+            return mediaPlayer.Volume;
         }
     }
 }

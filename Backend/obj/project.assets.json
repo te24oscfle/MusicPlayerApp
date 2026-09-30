@@ -196,7 +196,7 @@
           "build/VideoLAN.LibVLC.Windows.targets": {}
         }
       },
-      "z440.atl.core/7.17.0": {
+      "z440.atl.core/7.18.0": {
         "type": "package",
         "dependencies": {
           "Ude.NetStandard": "1.2.0"
@@ -1966,17 +1966,17 @@
         "videolan.libvlc.windows.nuspec"
       ]
     },
-    "z440.atl.core/7.17.0": {
-      "sha512": "7Uoh61E1W+WfVhw15OFFjl2BMfUABoLNe5DrhKwHWoXfIvC44Rq942LXoAvBf6YEvJRul6tvrvX0nwDxDUQfvw==",
+    "z440.atl.core/7.18.0": {
+      "sha512": "xuoUsHe+xSlh0cDDvDrQc4PQdBraTQVlZFDY+AcFueGd/rT9xfQM9wK4Zwz3NwHDKbF7555bpopGWGkX+iN9Gg==",
       "type": "package",
-      "path": "z440.atl.core/7.17.0",
+      "path": "z440.atl.core/7.18.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "README.md",
         "lib/net6.0/ATL.dll",
         "lib/net6.0/ATL.xml",
-        "z440.atl.core.7.17.0.nupkg.sha512",
+        "z440.atl.core.7.18.0.nupkg.sha512",
         "z440.atl.core.nuspec"
       ]
     }
@@ -1986,27 +1986,27 @@
       "LibVLCSharp >= 3.10.1",
       "Microsoft.Data.Sqlite >= 10.0.12",
       "VideoLAN.LibVLC.Windows >= 3.0.24",
-      "z440.atl.core >= 7.17.0"
+      "z440.atl.core >= 7.18.0"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Oscar\\.nuget\\packages\\": {},
+    "C:\\Users\\te24o\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\Projects\\MusicPlayerApplication\\Backend\\Backend.csproj",
+      "projectUniqueName": "C:\\Users\\te24o\\Documents\\Projects\\MusicPlayerApp\\MusicPlayerApp\\backend\\Backend.csproj",
       "projectName": "Backend",
-      "projectPath": "E:\\Projects\\MusicPlayerApplication\\Backend\\Backend.csproj",
-      "packagesPath": "C:\\Users\\Oscar\\.nuget\\packages\\",
-      "outputPath": "E:\\Projects\\MusicPlayerApplication\\Backend\\obj\\",
+      "projectPath": "C:\\Users\\te24o\\Documents\\Projects\\MusicPlayerApp\\MusicPlayerApp\\backend\\Backend.csproj",
+      "packagesPath": "C:\\Users\\te24o\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\te24o\\Documents\\Projects\\MusicPlayerApp\\MusicPlayerApp\\backend\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Oscar\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\te24o\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -2055,7 +2055,7 @@
           },
           "z440.atl.core": {
             "target": "Package",
-            "version": "[7.17.0, )"
+            "version": "[7.18.0, )"
           }
         },
         "imports": [
@@ -2077,7 +2077,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.401/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.400/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.AspNetCore": "(,10.0.32767]",
           "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
