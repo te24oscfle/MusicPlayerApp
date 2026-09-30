@@ -3,6 +3,13 @@ using LibVLCSharp.Shared;
 
 namespace Playback
 {
+    public record PlaybackState(
+        Track? CurrentTrack,
+        bool IsPlaying,
+        float Position,
+        int Volume
+    );
+    
     public static class AudioPlayer
     {
         private static LibVLC vlcInstance = new LibVLC();
@@ -53,6 +60,16 @@ namespace Playback
         }
 
         #endregion
+        
+        public static PlaybackState GetPlaybackState()
+        {
+            return new PlaybackState(
+                currentTrack, 
+                IsPlaying(), 
+                GetCurrentPosition(), 
+                GetVolume()
+            );
+        }
         
         public static void PlayTrack(Track track)
         {
