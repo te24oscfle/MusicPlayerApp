@@ -3,9 +3,9 @@ using Playback;
 namespace CommandSystem
 {
     [Command(
-        "removefromqueue", 
+        "removeFromQueue", 
         "Removes all tracks provided from the queue", 
-        "removefromqueue <index...>"
+        "removeFromQueue <index...>"
     )]
     public class RemoveFromQueue : ICommand
     {
