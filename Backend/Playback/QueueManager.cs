@@ -54,5 +54,25 @@ namespace Playback
 
             Console.WriteLine($"Removed {removedTracks} tracks from queue");
         }
+
+        public static void MoveTrack(int fromIndex, int toIndex)
+        {
+            if (fromIndex == toIndex)
+            {
+                return;
+            }
+            
+            if (fromIndex >= queue.Count || toIndex >= queue.Count)
+            {
+                Console.WriteLine("Both fromIndex and toIndex must be smaller than queue.Count");
+                return;
+            }
+
+            QueueItem item = queue[fromIndex];
+            queue.RemoveAt(fromIndex);
+            queue.Insert(toIndex, item);
+
+            Console.WriteLine($"Successfully moved {item.Track.Metadata.Title} from {fromIndex} to {toIndex}");
+        }
     }
 }
