@@ -1,4 +1,3 @@
-using System.Runtime.Serialization;
 using MusicPlayerApp;
 
 namespace Playback
@@ -36,9 +35,24 @@ namespace Playback
             Console.WriteLine($"Cleared {tracksCleared} tracks");
         }
 
-        public static void RemoveTrackFromQueue(int index)
+        public static void RemoveTracksFromQueue(int[] indexes)
         {
+            int removedTracks = 0;
             
+            // We remove in the reverse order to make sure deleting an index won't offset other indexes 
+            // and thus deleting the wrong tracks
+            Array.Sort(indexes);
+            Array.Reverse(indexes);
+
+            foreach(int index in indexes)
+            {
+                if (index > queue.Count)
+                    continue;
+                queue.RemoveAt(index);
+                removedTracks++;
+            }
+
+            Console.WriteLine($"Removed {removedTracks} tracks from queue");
         }
     }
 }
