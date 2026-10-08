@@ -16,18 +16,29 @@ namespace Playback
 
         public static void AddTracksToQueue(List<Track> tracks, bool isPersistent, bool addToFront=false)
         {
-            Console.WriteLine(addToFront);
-            
             List<QueueItem> queueItems = tracks.Select(track => new QueueItem(track, isPersistent)).ToList();
             if (!addToFront || queue.Count == 0)
-            {
-                Console.WriteLine("Adding to back of queue");
                 queue.AddRange(queueItems);
-                return;
-            }
+            else
+                queue.InsertRange(currentIndex, queueItems);
 
-            Console.WriteLine("Adding to front of queue");
-            queue.InsertRange(currentIndex, queueItems);
+            Console.WriteLine($"Added {tracks.Count} tracks");
+        }
+
+        public static void ClearQueue(bool clearPersistentTracks=false)
+        {
+            int tracksCleared = queue.Count;
+            if (clearPersistentTracks)
+                queue.Clear();
+            else
+                tracksCleared = queue.RemoveAll(queueItem => queueItem.IsPersistent == false);
+            
+            Console.WriteLine($"Cleared {tracksCleared} tracks");
+        }
+
+        public static void RemoveTrackFromQueue(int index)
+        {
+            
         }
     }
 }

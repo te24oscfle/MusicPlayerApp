@@ -4,11 +4,11 @@ using Playback;
 namespace CommandSystem
 {
     [Command(
-        "addtrackstoqueue", 
+        "addtoqueue", 
         "Adds all tracks provided to the queue", 
-        "addtrackstoqueue"
+        "addtoqueue"
     )]
-    public class AddTracksToQueue : ICommand
+    public class AddToQueue : ICommand
     {
         public Task Execute(string[] arguments)
         {
