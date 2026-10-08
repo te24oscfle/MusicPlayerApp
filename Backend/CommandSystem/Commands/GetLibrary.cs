@@ -3,9 +3,9 @@ using MusicPlayerApp;
 namespace CommandSystem
 {
     [Command(
-        "getlibrary", 
+        "getLibrary", 
         "Lists all tracks in the library", 
-        "getlibrary"
+        "getLibrary"
     )]
     public class GetLibrary : ICommand
     {

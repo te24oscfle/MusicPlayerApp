@@ -4,9 +4,9 @@ using Playback;
 namespace CommandSystem
 {
     [Command(
-        "getplaybackstate", 
+        "getPlaybackState", 
         "Prints out current track, IsPlaying, CurrentPosition, and CurrentVolume", 
-        "getplaybackstate"
+        "getPlaybackState"
     )]
     public class GetPlaybackState : ICommand
     {

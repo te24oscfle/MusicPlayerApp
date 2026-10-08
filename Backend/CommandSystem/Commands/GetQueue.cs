@@ -3,9 +3,9 @@ using Playback;
 namespace CommandSystem
 {
     [Command(
-        "getqueue", 
+        "getQueue", 
         "Lists all tracks in the queue", 
-        "getqueue"
+        "getQueue"
     )]
     public class GetQueue : ICommand
     {

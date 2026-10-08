@@ -3,9 +3,9 @@ using Playback;
 namespace CommandSystem
 {
     [Command(
-        "clearqueue", 
+        "clearQueue", 
         "Clears the queue", 
-        "clearqueue"
+        "clearQueue"
     )]
     public class ClearQueue : ICommand
     {

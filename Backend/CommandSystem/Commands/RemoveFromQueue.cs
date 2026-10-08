@@ -5,7 +5,7 @@ namespace CommandSystem
     [Command(
         "removefromqueue", 
         "Removes all tracks provided from the queue", 
-        "removefromqueue"
+        "removefromqueue <index...>"
     )]
     public class RemoveFromQueue : ICommand
     {

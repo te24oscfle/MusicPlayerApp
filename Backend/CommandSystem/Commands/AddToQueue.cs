@@ -4,9 +4,9 @@ using Playback;
 namespace CommandSystem
 {
     [Command(
-        "addtoqueue", 
+        "addToQueue", 
         "Adds all tracks provided to the queue", 
-        "addtoqueue"
+        "addToQueue <trackId...>"
     )]
     public class AddToQueue : ICommand
     {
