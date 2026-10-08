@@ -4,7 +4,7 @@ using MusicPlayerApp;
 namespace Playback
 {
     public record QueueItem(
-        Track track,
+        Track Track,
         bool IsPersistent
     );
     
@@ -16,17 +16,18 @@ namespace Playback
 
         public static void AddTracksToQueue(List<Track> tracks, bool isPersistent, bool addToFront=false)
         {
+            Console.WriteLine(addToFront);
+            
             List<QueueItem> queueItems = tracks.Select(track => new QueueItem(track, isPersistent)).ToList();
-            if (!addToFront)
+            if (!addToFront || queue.Count == 0)
             {
+                Console.WriteLine("Adding to back of queue");
                 queue.AddRange(queueItems);
                 return;
             }
 
-            for (int i = 1; i <= queueItems.Count; i++)
-            {
-                queue.Insert(currentIndex + i, queueItems[i]);
-            }
+            Console.WriteLine("Adding to front of queue");
+            queue.InsertRange(currentIndex, queueItems);
         }
     }
 }
