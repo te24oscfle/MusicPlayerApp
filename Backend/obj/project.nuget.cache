@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "VEECvuBcjbs=",
+  "dgSpecHash": "NDqBoWtgSDs=",
   "success": true,
-  "projectFilePath": "E:\\Projects\\MusicPlayerApplication\\backend\\Backend.csproj",
+  "projectFilePath": "E:\\Projects\\MusicPlayerApplication\\Backend\\Backend.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Oscar\\.nuget\\packages\\libvlcsharp\\3.10.1\\libvlcsharp.3.10.1.nupkg.sha512",
     "C:\\Users\\Oscar\\.nuget\\packages\\microsoft.data.sqlite\\10.0.12\\microsoft.data.sqlite.10.0.12.nupkg.sha512",

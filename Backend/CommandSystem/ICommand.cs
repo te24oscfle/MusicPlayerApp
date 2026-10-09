@@ -26,7 +26,7 @@ namespace CommandSystem
         }
     }
 
-    public interface ICommand
+    public interface ICommand 
     {
         public Task Execute(string[] arguments);
     }

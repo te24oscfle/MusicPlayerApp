@@ -46,7 +46,7 @@ namespace Playback
 
             foreach(int index in indexes)
             {
-                if (index > queue.Count)
+                if (index > queue.Count || index < 0)
                     continue;
                 queue.RemoveAt(index);
                 removedTracks++;
@@ -62,9 +62,9 @@ namespace Playback
                 return;
             }
             
-            if (fromIndex >= queue.Count || toIndex >= queue.Count)
+            if (fromIndex >= queue.Count || toIndex >= queue.Count || fromIndex < 0 || toIndex < 0)
             {
-                Console.WriteLine("Both fromIndex and toIndex must be smaller than queue.Count");
+                Console.WriteLine("Both fromIndex and toIndex must be smaller than queue.Count and greater or equal to zero");
                 return;
             }
 
