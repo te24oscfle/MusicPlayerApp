@@ -37,6 +37,13 @@ namespace Playback
         private static void OnEndReached(object? sender, EventArgs eventArgs)
         {
             Console.WriteLine($"Track ended");
+
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                Console.WriteLine("Advancing the queue on a different thread.");
+                PlaybackResult nextPlayback = QueueManager.AdvanceQueue();
+                PlayTrackFromPlaybackResult(nextPlayback);
+            });
         }
         
         private static void OnMediaChanged(object? sender, EventArgs eventArgs)
@@ -70,8 +77,8 @@ namespace Playback
                 GetVolume()
             );
         }
-        
-        public static void PlayTrack(Track track)
+
+        public static void SetTrack(Track track)
         {
             if (IsPlaying()) 
                 mediaPlayer.Stop();
@@ -79,7 +86,28 @@ namespace Playback
             currentTrack = track;
 
             Media media = new Media(vlcInstance, new Uri(track.FilePath));
-            mediaPlayer.Play(media);
+            mediaPlayer.Media = media;
+
+        }
+        
+        public static void PlayTrack(Track track)
+        {
+            SetTrack(track);
+            Resume();
+        }
+
+        public static void PlayTrackFromPlaybackResult(PlaybackResult playbackResult)
+        {
+            Track? track = playbackResult.Track;
+            if(track == null)
+                return;
+            
+            SetTrack(track);
+
+            if (playbackResult.ShouldAutoPlay)
+            {
+                Resume();
+            }
         }
 
         public static bool IsPlaying()
@@ -96,6 +124,7 @@ namespace Playback
         {
             if (mediaPlayer.Media != null)
                 mediaPlayer.Play();
+            Console.WriteLine("Got to resume function call");
         }
 
         public static void SetVolume(int value)
