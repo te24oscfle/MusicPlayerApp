@@ -23,7 +23,7 @@ namespace CommandSystem
                 .OfType<Track>()
                 .ToList();
 
-            QueueManager.AddTracksToQueue(tracks, false, true);
+            QueueManager.AddTracksToQueue(tracks, true, false);
 
             return Task.CompletedTask;
         }

@@ -40,8 +40,7 @@ namespace Playback
 
             ThreadPool.QueueUserWorkItem(_ =>
             {
-                Console.WriteLine("Advancing the queue on a different thread.");
-                PlaybackResult nextPlayback = QueueManager.AdvanceQueue();
+                PlaybackResult nextPlayback = QueueManager.Next();
                 PlayTrackFromPlaybackResult(nextPlayback);
             });
         }
@@ -124,7 +123,6 @@ namespace Playback
         {
             if (mediaPlayer.Media != null)
                 mediaPlayer.Play();
-            Console.WriteLine("Got to resume function call");
         }
 
         public static void SetVolume(int value)

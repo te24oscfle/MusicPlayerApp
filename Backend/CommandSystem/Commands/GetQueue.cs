@@ -23,7 +23,11 @@ namespace CommandSystem
             for(int i = 0; i < queue.Count; i++)
             {
                 QueueItem queueItem = queue[i];
-                Console.WriteLine($"\t{i}. {queueItem.Track.Metadata.Title}");
+                Console.Write($"\n\t{i}. {queueItem.Track.Metadata.Title}");
+                if(i == QueueManager.CurrentIndex)
+                {
+                    Console.Write(" <-- CurrentIndex");
+                }
             }
             Console.Write("\n");
 
