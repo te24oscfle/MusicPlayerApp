@@ -82,6 +82,18 @@ namespace Playback
                 return;
             }
 
+            if (fromIndex == currentIndex)
+            {
+                Console.WriteLine("Cannot move track currently being played");
+                return;
+            }
+
+            if (toIndex <= currentIndex)
+            {
+                Console.WriteLine("Cannot move track behind track currently being played");
+                return;
+            }
+
             QueueItem item = queue[fromIndex];
             queue.RemoveAt(fromIndex);
             queue.Insert(toIndex, item);
