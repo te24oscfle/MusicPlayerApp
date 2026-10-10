@@ -144,5 +144,12 @@ namespace Playback
             Track? previousTrack = previousItem is not null ? previousItem.Track : null;
             return new PlaybackResult(previousTrack, true); // TODO: Create better ShouldAutoPlay condition depending on if loopQueue is enabled.
         }
+
+        public static PlaybackResult GetCurrentPlayback()
+        {
+            QueueItem? item = queue.ElementAtOrDefault(currentIndex);
+            Track? track = item is not null ? item.Track : null;
+            return new PlaybackResult(track, true); // TODO: Create ShouldAutoPlay condition? Unsure.
+        }
     }
 }

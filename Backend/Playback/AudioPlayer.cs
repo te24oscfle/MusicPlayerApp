@@ -86,7 +86,6 @@ namespace Playback
 
             Media media = new Media(vlcInstance, new Uri(track.FilePath));
             mediaPlayer.Media = media;
-
         }
         
         public static void PlayTrack(Track track)
@@ -123,6 +122,13 @@ namespace Playback
         {
             if (mediaPlayer.Media != null)
                 mediaPlayer.Play();
+            else
+            {
+                // TODO: This could potentially create a recursion.
+                // PlayTrackFromPlaybackResult will eventuelly call Resume(). If the Media is not set at that point, it will return back to this point.
+                PlaybackResult playbackResult = QueueManager.GetCurrentPlayback();
+                PlayTrackFromPlaybackResult(playbackResult);
+            }
         }
 
         public static void SetVolume(int value)
