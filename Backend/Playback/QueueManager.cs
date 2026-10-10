@@ -32,7 +32,7 @@ namespace Playback
             if (!addToFront || queue.Count == 0)
                 queue.AddRange(queueItems);
             else
-                queue.InsertRange(currentIndex, queueItems);
+                queue.InsertRange(currentIndex + 1, queueItems);
 
             Console.WriteLine($"Added {tracks.Count} tracks");
         }
@@ -41,9 +41,12 @@ namespace Playback
         {
             int tracksCleared = queue.Count;
             if (clearPersistentTracks)
+            {
                 queue.Clear();
+                currentIndex = 0;
+            }
             else
-                tracksCleared = queue.RemoveAll(queueItem => queueItem.IsPersistent == false);
+                tracksCleared = queue.RemoveAll(queueItem => queueItem.IsPersistent == false && queueItem != queue[currentIndex]);
             
             Console.WriteLine($"Cleared {tracksCleared} tracks");
         }

@@ -108,6 +108,14 @@ namespace Playback
             }
         }
 
+        public static void DisposeMedia()
+        {
+            if (IsPlaying())
+                mediaPlayer.Stop();
+            
+            mediaPlayer.Media?.Dispose();
+        }
+
         public static bool IsPlaying()
         {
             return mediaPlayer.IsPlaying;

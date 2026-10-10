@@ -73,5 +73,13 @@ namespace MusicPlayerApp
                 );
             }
         }
+
+        public List<Track> GetTracks()
+        {
+            return Discs
+                .OrderBy(pair => pair.Key)
+                .SelectMany(pair => pair.Value)
+                .ToList();
+        }
     }
 }
