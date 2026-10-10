@@ -11,7 +11,8 @@ namespace CommandSystem
     {
         public Task Execute(string[] arguments)
         {
-            QueueManager.Previous();
+            PlaybackResult playbackResult = QueueManager.Previous();
+            AudioPlayer.PlayTrackFromPlaybackResult(playbackResult);
             return Task.CompletedTask;
         }
     }
