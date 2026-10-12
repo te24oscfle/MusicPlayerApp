@@ -62,7 +62,8 @@ namespace Playback
 
         private static void OnVolumeChanged(object? sender, EventArgs eventArgs)
         {
-           
+            // Found issue: Seemingly when media gets disposed and is set to null, the volume updates to -1, which would be undesirable to send to the client. The fix is to simply only send the client a volume update if the volume is between 0 and 100.
+            // If I even send these volume updates to the client, after all the client itself will be updating the volume, surely the client would know itself.
         }
 
         #endregion
@@ -81,6 +82,8 @@ namespace Playback
         {
             if (IsPlaying()) 
                 mediaPlayer.Stop();
+            
+            DisposeMedia();
 
             currentTrack = track;
 
@@ -98,7 +101,11 @@ namespace Playback
         {
             Track? track = playbackResult.Track;
             if(track == null)
+            {
+                DisposeMedia();
+                currentTrack = null;
                 return;
+            }
             
             SetTrack(track);
 
