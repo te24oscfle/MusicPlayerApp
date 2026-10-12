@@ -16,7 +16,7 @@ namespace MusicPlayerApp
     {
         static void Initilize()
         {
-            DatabaseManager.InitilizeDatabase();
+            DatabaseHelper.InitilizeDatabase();
             Library.LoadLibraryFromDatabase();
             AudioPlayer.InitilizeAudioPlayer();
         }
