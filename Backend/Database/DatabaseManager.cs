@@ -345,13 +345,6 @@ namespace Database
             }
         }
 
-        public static void WritePlaylistEntry(SqliteCommand command, PlaylistEntry playlistEntry)
-        {
-            command.Parameters.AddWithValue("playlist_id", playlistEntry.PlaylistId);
-            command.Parameters.AddWithValue("position", playlistEntry.Position);
-            command.Parameters.AddWithValue("track_id", playlistEntry.TrackId);
-        }
-
         public static void UpdatePlaylistTracks(Playlist playlist)
         {
             if (!playlist.PlaylistId.HasValue)
@@ -388,7 +381,7 @@ namespace Database
                         INSERT INTO playlist_tracks (playlist_id, position, track_id)
                         VALUES (@playlist_id, @position, @track_id)
                         """,
-                        WritePlaylistEntry,
+                        DatabaseHelper.WritePlaylistEntry,
                         connection,
                         transaction
                     );

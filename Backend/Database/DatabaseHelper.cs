@@ -568,6 +568,13 @@ namespace Database
             command.Parameters.AddWithValue("playlist_type", playlist.PlaylistType.ToString());
         }
 
+        public static void WritePlaylistEntry(SqliteCommand command, PlaylistEntry playlistEntry)
+        {
+            command.Parameters.AddWithValue("playlist_id", playlistEntry.PlaylistId);
+            command.Parameters.AddWithValue("position", playlistEntry.Position);
+            command.Parameters.AddWithValue("track_id", playlistEntry.TrackId);
+        }
+
         #endregion
     }
 }
