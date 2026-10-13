@@ -306,6 +306,36 @@ namespace Database
                     playlist.InitilizePlaylistId(id.Value);
             }
         }
+
+        public static List<Playlist> GetPlaylists()
+        {
+            List<Playlist> playlists = DatabaseHelper.ReadToList(
+                """
+                SELECT * FROM playlist_metadata
+                """,
+                DatabaseHelper.ReadPlaylist
+            );
+
+            foreach (Playlist playlist in playlists)
+            {
+                List<Track> tracks = DatabaseHelper.ReadToList(
+                    """
+                    SELECT track.*
+                    FROM playlist_tracks AS playlist_entry
+                    JOIN tracks AS track
+                        ON track.track_id = playlist_entry.track_id
+                    WHERE playlist_entry.playlist_id = @playlist_id
+                    ORDER BY playlist_entry.position
+                    """,
+                    DatabaseHelper.ReadTrack,
+                    command => command.Parameters.AddWithValue("playlist_id", playlist.PlaylistId)
+                );
+                
+                playlist.AddTracks(tracks);
+            };
+
+            return playlists;
+        }
         
         public static void DeletePlaylist(Playlist playlist)
         {

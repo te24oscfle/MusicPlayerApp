@@ -560,6 +560,27 @@ namespace Database
             command.Parameters.AddWithValue("album_artist", album.Artist);
         }
 
+        public static Playlist ReadPlaylist(SqliteDataReader reader)
+        {
+            Enum.TryParse(
+                reader.GetString(reader.GetOrdinal("playlist_type")), 
+                true, 
+                out PlaylistType playlistType
+            );
+            
+            return new Playlist(
+                reader.GetInt32(reader.GetOrdinal("playlist_id")),
+                reader.GetString(reader.GetOrdinal("title")),
+                reader.IsDBNull(reader.GetOrdinal("description")) is false
+                    ? reader.GetString(reader.GetOrdinal("description")) 
+                    : null,
+                reader.IsDBNull(reader.GetOrdinal("image_file_path")) is false
+                    ? reader.GetString(reader.GetOrdinal("image_file_path")) 
+                    : null,
+                playlistType
+            );
+        }
+
         public static void WritePlaylistMetadata(SqliteCommand command, Playlist playlist)
         {
             command.Parameters.AddWithValue("title", playlist.Title);

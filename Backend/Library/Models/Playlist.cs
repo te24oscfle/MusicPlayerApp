@@ -26,7 +26,7 @@ namespace MusicPlayerApp
         public PlaylistType PlaylistType { get; }
         public List<Track> Tracks => _tracks;
         
-        public Playlist(int playlistId, string title, string description, string imageFilePath, PlaylistType playlistType)
+        public Playlist(int playlistId, string title, string? description, string? imageFilePath, PlaylistType playlistType)
         {
             PlaylistId = playlistId;
             Title = title;
