@@ -1,3 +1,4 @@
+using System.Data.SqlTypes;
 using System.Globalization;
 using Microsoft.Data.Sqlite;
 using MusicPlayerApp;
@@ -123,7 +124,11 @@ namespace Database
         
         #region General Reader/Writer functions
 
-        public static T? Read<T>(string sqlCommand, Func<SqliteDataReader, T> mapper, Action<SqliteCommand>? configureCommand=null)
+        public static T? Read<T>(
+            string sqlCommand, 
+            Func<SqliteDataReader, T> mapper, 
+            Action<SqliteCommand>? configureCommand=null
+        )
         {
             // Check if database is initilized
             if (!isDatabaseInitilized)
@@ -238,6 +243,27 @@ namespace Database
             return failedItems;
         }
 
+        public static T WriteReturning<T>(string sqlCommand, Action<SqliteCommand>? configureCommand = null)
+        {
+            // Check if database is initilized
+            if (!isDatabaseInitilized)
+                throw new Exception("Database must be initilized before this function can be called.");
+
+            // Open connection and create command
+            using SqliteConnection connection = GetConnection();
+            using SqliteCommand command = new SqliteCommand(sqlCommand, connection);
+
+            // Invoke the configureCommand action only if it was provided
+            configureCommand?.Invoke(command);
+
+            // Write data and get return value
+            object? result = command.ExecuteScalar();
+            if (result is null or DBNull)
+                throw new InvalidOperationException("The SQL command could not return a value");
+            
+            return (T)Convert.ChangeType(result, typeof(T));
+        }
+
         #endregion
 
         #region Class-specific read/write functions
@@ -312,12 +338,6 @@ namespace Database
             command.Parameters.AddWithValue("last_modified_utc", metadata.LastModifiedUtc.ToString("O"));
         }
         
-        public static void WriteAlbum(SqliteCommand command, Album album)
-        {
-            command.Parameters.AddWithValue("album_title", album.Title);
-            command.Parameters.AddWithValue("album_artist", album.Artist);
-        }
-
         public static Album ReadAlbum(SqliteDataReader reader)
         {
             Album album = new Album(
@@ -327,6 +347,28 @@ namespace Database
             );
 
             return album;
+        }
+        
+        public static void WriteAlbum(SqliteCommand command, Album album)
+        {
+            command.Parameters.AddWithValue("album_title", album.Title);
+            command.Parameters.AddWithValue("album_artist", album.Artist);
+        }
+
+        public static void WritePlaylistMetadata(SqliteCommand command, Playlist playlist)
+        {
+            command.Parameters.AddWithValue("title", playlist.Title);
+            command.Parameters.AddWithValue("description", playlist.Description);
+            command.Parameters.AddWithValue("image_file_path", playlist.ImageFilePath);
+            command.Parameters.AddWithValue("playlist_type", playlist.PlaylistType.ToString());
+        }
+
+        public static void SavePlaylistTracks(int playlistId, List<Track> tracks)
+        {
+            using SqliteConnection connection = GetConnection();
+            using SqliteTransaction transaction = connection.BeginTransaction();
+
+
         }
 
         #endregion

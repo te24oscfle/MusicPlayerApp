@@ -13,7 +13,7 @@ namespace MusicPlayerApp
     {
         private List<Track> _tracks = new List<Track>();
         
-        public int PlaylistId { get; }
+        public int? PlaylistId { get; internal set; }
         public string Title { get; internal set; }
         public string? Description { get; internal set; }
         public string? ImageFilePath { get; internal set; }
@@ -28,7 +28,18 @@ namespace MusicPlayerApp
             ImageFilePath = imageFilePath;
             PlaylistType = playlistType;
         }
-
+        
+        public void InitilizePlaylistId(int id)
+        {
+            if(PlaylistId.HasValue)
+                throw new InvalidOperationException("The playlistId has already been initilized");
+            
+            if (id <= 0)
+                throw new ArgumentOutOfRangeException(nameof(id));
+            
+            PlaylistId = id;
+        }
+        
         public void UpdateMetadata(string? title, string? description, string? imageFilePath)
         {
             // Use the new value if it exists, else keep using value already assigned
@@ -72,11 +83,11 @@ namespace MusicPlayerApp
             if (fromIndex == toIndex)
                 return;
             
-            if (fromIndex < 0 || fromIndex > _tracks.Count || toIndex < 0 || toIndex > _tracks.Count)
-            {
-                Console.WriteLine("Both fromIndex and toIndex must be smaller than playlist length and greater or equal to zero");
-                return;
-            }
+            if(fromIndex < 0 || fromIndex > _tracks.Count)
+                throw new ArgumentOutOfRangeException(nameof(fromIndex));
+            
+            if (toIndex < 0 || toIndex > _tracks.Count)
+                throw new ArgumentOutOfRangeException(nameof(toIndex));
 
             Track track = _tracks[fromIndex];
             _tracks.RemoveAt(fromIndex);

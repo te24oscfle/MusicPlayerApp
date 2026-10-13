@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using ATL.Playlist;
 using MusicPlayerApp;
 
 namespace Database
@@ -248,17 +250,6 @@ namespace Database
             }
         }
 
-        public static List<string> GetFilePaths()
-        {
-            return DatabaseHelper.ReadToList(
-                """
-                SELECT file_path FROM tracks
-                """,
-                reader => 
-                    reader.GetString(reader.GetOrdinal("file_path"))
-            );
-        }
-
         public static List<string> GetAlbumKeys()
         {
             return DatabaseHelper.ReadToList(
@@ -295,6 +286,69 @@ namespace Database
         public static int GetAlbumIdFromAlbum(string albumTitle, string albumArtist)
         {
             return GetAlbumIdFromAlbum(new Album(albumTitle, albumArtist));
+        }
+
+        public static void AddPlaylist(Playlist playlist)
+        {
+            int? id = DatabaseHelper.WriteReturning<int>(
+                """
+                INSERT INTO playlist_metadata (title, description, image_file_path, playlist_type)
+                VALUES (@title, @description, @image_file_path, @playlist_type)
+                RETURNING playlist_id
+                """, 
+                command => DatabaseHelper.WritePlaylistMetadata(command, playlist)
+            );
+
+            if (id is not null)
+                playlist.InitilizePlaylistId(id.Value);
+        }
+        
+        public static void DeletePlaylist(Playlist playlist)
+        {
+            bool success = DatabaseHelper.Write(
+                """
+                DELETE FROM * playlist_metadata
+                WHERE playlist_id = @playlist_id
+                """,
+                command => command.Parameters.AddWithValue("playlist_id", playlist.PlaylistId)
+            );
+            if(success)
+                Console.WriteLine($"Deleted Playlist {playlist.Title}");
+        }
+
+        public static void UpdatePlaylistMetadata(Playlist playlist)
+        {
+            DatabaseHelper.Write(
+                """
+                UPDATE playlist_metadata
+                SET title = @title
+                    description = @description
+                    image_file_path = @image_file_path
+                    playlist_type = @playlist_type
+                WHERE playlist_id = @playlist_id
+                """,
+                command =>
+                {
+                    DatabaseHelper.WritePlaylistMetadata(command, playlist);
+                    command.Parameters.AddWithValue("playlist_id", playlist.PlaylistId);
+                }
+            );
+        }
+
+        public static void UpdatePlaylistTracks(Playlist playlist)
+        {
+            
+        }
+
+        public static List<string> GetFilePaths()
+        {
+            return DatabaseHelper.ReadToList(
+                """
+                SELECT file_path FROM tracks
+                """,
+                reader => 
+                    reader.GetString(reader.GetOrdinal("file_path"))
+            );
         }
     }    
 }
