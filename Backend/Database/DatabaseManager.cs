@@ -318,6 +318,9 @@ namespace Database
 
             foreach (Playlist playlist in playlists)
             {
+                if(playlist.PlaylistType is not PlaylistType.Manual)
+                    continue;
+                
                 List<Track> tracks = DatabaseHelper.ReadToList(
                     """
                     SELECT track.*
