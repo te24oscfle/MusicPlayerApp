@@ -132,7 +132,7 @@ namespace Database
         {
             // Check if database is initilized
             if (!isDatabaseInitilized)
-                throw new Exception("Database must be initilized before this function can be called.");
+                throw new InvalidOperationException("The database must be initialized before this function can be called.");
             
             // Open connection and create command
             using SqliteConnection connection = GetConnection();
@@ -152,11 +152,48 @@ namespace Database
             return mapper(reader);
         }
 
-        public static List<T> ReadToList<T>(string sqlCommand, Func<SqliteDataReader, T> mapper, Action<SqliteCommand>? configureCommand = null)
+        public static T? Read<T>(
+            string sqlCommand, 
+            Func<SqliteDataReader, T> mapper, 
+            Action<SqliteCommand>? configureCommand,
+            SqliteConnection connection,
+            SqliteTransaction transaction
+        )
         {
             // Check if database is initilized
             if (!isDatabaseInitilized)
-                throw new Exception("Database must be initilized before this function can be called.");
+                throw new InvalidOperationException("The database must be initialized before this function can be called.");
+            
+            // Check if transaction belongs to provided connection
+            if (transaction.Connection != connection)
+                throw new ArgumentException("The transaction must belong to the provided connection.");
+            
+            // Create command
+            using SqliteCommand command = new SqliteCommand(sqlCommand, connection, transaction);
+
+            // Invoke the configureCommand action only if it was provided
+            configureCommand?.Invoke(command);
+
+            // Read data
+            using SqliteDataReader reader = command.ExecuteReader();
+            
+            // No data was found
+            if (!reader.Read())
+                return default;
+
+            // Data was found
+            return mapper(reader);
+        }
+
+        public static List<T> ReadToList<T>(
+            string sqlCommand, 
+            Func<SqliteDataReader, T> mapper, 
+            Action<SqliteCommand>? configureCommand = null
+        )
+        {
+            // Check if database is initilized
+            if (!isDatabaseInitilized)
+                throw new InvalidOperationException("The database must be initialized before this function can be called.");
 
             // Open connection and create command
             using SqliteConnection connection = GetConnection();
@@ -177,11 +214,48 @@ namespace Database
             return list;
         }
 
-        public static bool Write(string sqlCommand, Action<SqliteCommand>? configureCommand = null)
+        public static List<T> ReadToList<T>(
+            string sqlCommand, 
+            Func<SqliteDataReader, T> mapper, 
+            Action<SqliteCommand>? configureCommand,
+            SqliteConnection connection,
+            SqliteTransaction transaction
+        )
         {
             // Check if database is initilized
             if (!isDatabaseInitilized)
-                throw new Exception("Database must be initilized before this function can be called.");
+                throw new InvalidOperationException("The database must be initialized before this function can be called.");
+
+            // Check if transaction belongs to provided connection
+            if (transaction.Connection != connection)
+                throw new ArgumentException("The transaction must belong to the provided connection.");
+
+            // Create command
+            using SqliteCommand command = new SqliteCommand(sqlCommand, connection, transaction);
+
+            // Invoke the configureCommand action only if it was provided
+            configureCommand?.Invoke(command);
+
+            // Read data
+            using SqliteDataReader reader = command.ExecuteReader();
+
+            List<T> list = new List<T>();
+            while (reader.Read())
+            {
+                list.Add(mapper(reader));
+            }
+
+            return list;
+        }
+
+        public static bool Write(
+            string sqlCommand, 
+            Action<SqliteCommand>? configureCommand = null
+        )
+        {
+            // Check if database is initilized
+            if (!isDatabaseInitilized)
+                throw new InvalidOperationException("The database must be initialized before this function can be called.");
 
             // Open connection and create command
             using SqliteConnection connection = GetConnection();
@@ -211,11 +285,57 @@ namespace Database
             }
         }
 
-        public static List<FailedItem<T>> WriteFromList<T>(List<T> list, string sqlCommand, Action<SqliteCommand, T> configureCommand)
+        public static bool Write(
+            string sqlCommand, 
+            Action<SqliteCommand>? configureCommand,
+            SqliteConnection connection,
+            SqliteTransaction transaction
+        )
         {
             // Check if database is initilized
             if (!isDatabaseInitilized)
-                throw new Exception("Database must be initilized before this function can be called.");
+                throw new InvalidOperationException("The database must be initialized before this function can be called.");
+            
+            // Check if transaction belongs to provided connection
+            if (transaction.Connection != connection)
+                throw new ArgumentException("The transaction must belong to the provided connection.");
+            
+            // Create command
+            using SqliteCommand command = new SqliteCommand(sqlCommand, connection);
+
+            // Invoke the configureCommand action only if it was provided
+            configureCommand?.Invoke(command);
+
+            // Write data
+            try
+            {
+                command.ExecuteNonQuery();
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine($"Error when executing following SQL command:\n{command.CommandText}");
+
+                Console.WriteLine($"\nParamaters:");
+                foreach(SqliteParameter paramater in command.Parameters)
+                {
+                    Console.WriteLine($"\t{paramater.ParameterName}: {paramater.Value}");
+                }
+
+                Console.WriteLine($"\n{exception}\n");
+                return false;
+            }
+        }
+        
+        public static List<FailedItem<T>> WriteFromList<T>(
+            List<T> list, 
+            string sqlCommand, 
+            Action<SqliteCommand, T> configureCommand
+        )
+        {
+            // Check if database is initilized
+            if (!isDatabaseInitilized)
+                throw new InvalidOperationException("The database must be initialized before this function can be called.");
 
             // Open connection and create command
             using SqliteConnection connection = GetConnection();
@@ -243,11 +363,55 @@ namespace Database
             return failedItems;
         }
 
-        public static T WriteReturning<T>(string sqlCommand, Action<SqliteCommand>? configureCommand = null)
+        public static List<FailedItem<T>> WriteFromList<T>(
+            List<T> list, 
+            string sqlCommand, 
+            Action<SqliteCommand, T> configureCommand,
+            SqliteConnection connection,
+            SqliteTransaction transaction
+        )
         {
             // Check if database is initilized
             if (!isDatabaseInitilized)
-                throw new Exception("Database must be initilized before this function can be called.");
+                throw new InvalidOperationException("The database must be initialized before this function can be called.");
+
+            // Check if transaction belongs to provided connection
+            if (transaction.Connection != connection)
+                throw new ArgumentException("The transaction must belong to the provided connection.");
+
+            // Create command
+            using SqliteCommand command = new SqliteCommand(sqlCommand, connection);
+
+            List<FailedItem<T>> failedItems = new List<FailedItem<T>>();
+            foreach(T item in list)
+            {
+                try
+                {
+                    // Configure command
+                    command.Parameters.Clear();
+                    configureCommand(command, item);
+
+                    // Write data to database
+                    command.ExecuteNonQuery();
+                } 
+                catch (Exception exception)
+                {
+                    // Something went wrong when writing item to database
+                    failedItems.Add(new FailedItem<T>(item, exception));
+                }
+            }
+
+            return failedItems;
+        }
+
+        public static T WriteReturning<T>(
+            string sqlCommand, 
+            Action<SqliteCommand>? configureCommand = null
+        )
+        {
+            // Check if database is initilized
+            if (!isDatabaseInitilized)
+                throw new InvalidOperationException("The database must be initialized before this function can be called.");
 
             // Open connection and create command
             using SqliteConnection connection = GetConnection();
@@ -262,6 +426,57 @@ namespace Database
                 throw new InvalidOperationException("The SQL command could not return a value");
             
             return (T)Convert.ChangeType(result, typeof(T));
+        }
+
+        public static T WriteReturning<T>(
+            string sqlCommand, 
+            Action<SqliteCommand>? configureCommand,
+            SqliteConnection connection,
+            SqliteTransaction transaction
+        )
+        {
+            // Check if database is initilized
+            if (!isDatabaseInitilized)
+                throw new InvalidOperationException("The database must be initialized before this function can be called.");
+
+            // Check if transaction belongs to provided connection
+            if (transaction.Connection != connection)
+                throw new ArgumentException("The transaction must belong to the provided connection.");
+            
+            // Create command
+            using SqliteCommand command = new SqliteCommand(sqlCommand, connection);
+
+            // Invoke the configureCommand action only if it was provided
+            configureCommand?.Invoke(command);
+
+            // Write data and get return value
+            object? result = command.ExecuteScalar();
+            if (result is null or DBNull)
+                throw new InvalidOperationException("The SQL command could not return a value");
+            
+            return (T)Convert.ChangeType(result, typeof(T));
+        }
+
+        public static void ExecuteTransaction(Action<SqliteConnection, SqliteTransaction> action)
+        {
+            // Open connection and transaction
+            using SqliteConnection connection = GetConnection();
+            using SqliteTransaction transaction = connection.BeginTransaction();
+
+            try
+            {
+                // Call transaction action function
+                action(connection, transaction);
+
+                // Commit
+                transaction.Commit();
+            }
+            catch
+            {
+                // Something went wrong, rollback transaction
+                transaction.Rollback();
+                throw;
+            }
         }
 
         #endregion
