@@ -39,6 +39,7 @@ namespace Database
             List<SqliteCommand> commands = new List<SqliteCommand>
             {
                 // Tracks table
+
                 new SqliteCommand(
                     """
                     CREATE TABLE IF NOT EXISTS tracks (
@@ -57,6 +58,7 @@ namespace Database
                         last_modified_utc TEXT NOT NULL
                     )
                     """, connection),
+
                 // Albums table
                 new SqliteCommand(
                     """
@@ -67,6 +69,41 @@ namespace Database
                         track_count INTEGER,
                         disc_count INTEGER,
                         duration_seconds INTEGER
+                    )
+                    """, connection),
+                
+                // Playlist Metadata table
+                new SqliteCommand(
+                    """
+                    CREATE TABLE IF NOT EXISTS playlist_metadata (
+                        playlist_id INTEGER PRIMARY KEY,
+                        title TEXT NOT NULL,
+                        description TEXT
+                        image_file_path TEXT
+
+                        playlist_type TEXT NOT NULL DEFAULT 'manual'
+                            CHECK (playlist_type IN ('manual', 'smart'))
+                        
+                        smart_rules TEXT
+                    )
+                    """, connection),
+                
+                // Playlist Tracks table
+                new SqliteCommand(
+                    """
+                    CREATE TABLE IF NOT EXISTS playlist_tracks (
+                        playlist_id INTEGER,
+                        position INTERGER,
+                        track_id INTEGER,
+
+                        PRIMARY KEY (playlist_id, position),
+
+                        FOREIGN KEY (playlist_id)
+                            REFERENCES playlist_metadata(playlist_id)
+                            ON DELETE CASCADE,
+                        
+                        FOREIGN KEY (track_id)
+                            REFERENCES tracks(track_id)
                     )
                     """, connection)
             };
