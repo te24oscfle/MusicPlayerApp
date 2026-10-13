@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks.Dataflow;
 using ATL.Playlist;
+using Microsoft.Data.Sqlite;
 using MusicPlayerApp;
 
 namespace Database
@@ -336,9 +337,52 @@ namespace Database
             );
         }
 
+        public static void WritePlaylistEntry(SqliteCommand command, PlaylistEntry playlistEntry)
+        {
+            command.Parameters.AddWithValue("playlist_id", playlistEntry.PlaylistId);
+            command.Parameters.AddWithValue("position", playlistEntry.Position);
+            command.Parameters.AddWithValue("track_id", playlistEntry.TrackId);
+        }
+
         public static void UpdatePlaylistTracks(Playlist playlist)
         {
+            if (!playlist.PlaylistId.HasValue)
+                throw new InvalidOperationException("The playlist must have a PlaylistId");
             
+            DatabaseHelper.ExecuteTransaction((connection, transaction) =>
+            {
+                // Delete all tracks currently saved
+                DatabaseHelper.Write(
+                    """
+                    DELETE FROM playlist_tracks
+                    WHERE playlist_id = @playlist_id
+                    """,
+                    command => command.Parameters.AddWithValue("playlist_id", playlist.PlaylistId),
+                    connection, 
+                    transaction
+                );
+                
+                // Create playlist entries
+                List<PlaylistEntry> playlistEntries = playlist.Tracks
+                    .Select((track, index) => new PlaylistEntry(
+                        playlist.PlaylistId.Value,
+                        index, 
+                        track.TrackId
+                    ))
+                    .ToList();
+
+                // Reinsert all tracks
+                DatabaseHelper.WriteFromList(
+                    playlistEntries,
+                    """
+                    INSERT INTO playlist_tracks (playlist_id, position, track_id)
+                    VALUES (@playlist_id, @position, @track_id)
+                    """,
+                    WritePlaylistEntry,
+                    connection,
+                    transaction
+                );
+            });
         }
 
         public static List<string> GetFilePaths()

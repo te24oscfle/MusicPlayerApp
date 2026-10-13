@@ -9,6 +9,12 @@ namespace MusicPlayerApp
         Smart
     }
 
+    public record PlaylistEntry(
+        int PlaylistId,
+        int Position,
+        int TrackId
+    );
+    
     public class Playlist
     {
         private List<Track> _tracks = new List<Track>();

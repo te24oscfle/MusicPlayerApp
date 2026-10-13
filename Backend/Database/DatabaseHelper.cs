@@ -1,5 +1,6 @@
 using System.Data.SqlTypes;
 using System.Globalization;
+using System.Transactions;
 using Microsoft.Data.Sqlite;
 using MusicPlayerApp;
 
@@ -363,7 +364,7 @@ namespace Database
             return failedItems;
         }
 
-        public static List<FailedItem<T>> WriteFromList<T>(
+        public static void WriteFromList<T>(
             List<T> list, 
             string sqlCommand, 
             Action<SqliteCommand, T> configureCommand,
@@ -380,28 +381,17 @@ namespace Database
                 throw new ArgumentException("The transaction must belong to the provided connection.");
 
             // Create command
-            using SqliteCommand command = new SqliteCommand(sqlCommand, connection);
+            using SqliteCommand command = new SqliteCommand(sqlCommand, connection, transaction);
 
-            List<FailedItem<T>> failedItems = new List<FailedItem<T>>();
             foreach(T item in list)
             {
-                try
-                {
-                    // Configure command
-                    command.Parameters.Clear();
-                    configureCommand(command, item);
+                // Configure command
+                command.Parameters.Clear();
+                configureCommand(command, item);
 
-                    // Write data to database
-                    command.ExecuteNonQuery();
-                } 
-                catch (Exception exception)
-                {
-                    // Something went wrong when writing item to database
-                    failedItems.Add(new FailedItem<T>(item, exception));
-                }
+                // Write data to database
+                command.ExecuteNonQuery();
             }
-
-            return failedItems;
         }
 
         public static T WriteReturning<T>(
@@ -576,14 +566,6 @@ namespace Database
             command.Parameters.AddWithValue("description", playlist.Description);
             command.Parameters.AddWithValue("image_file_path", playlist.ImageFilePath);
             command.Parameters.AddWithValue("playlist_type", playlist.PlaylistType.ToString());
-        }
-
-        public static void SavePlaylistTracks(int playlistId, List<Track> tracks)
-        {
-            using SqliteConnection connection = GetConnection();
-            using SqliteTransaction transaction = connection.BeginTransaction();
-
-
         }
 
         #endregion
