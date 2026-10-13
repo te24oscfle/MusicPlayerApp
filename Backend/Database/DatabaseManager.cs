@@ -1,6 +1,3 @@
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks.Dataflow;
-using ATL.Playlist;
 using Microsoft.Data.Sqlite;
 using MusicPlayerApp;
 
@@ -8,6 +5,8 @@ namespace Database
 {
     public static class DatabaseManager
     {
+        private static readonly object playlistLock = new();
+        
         public static void AddTracks(List<Track> tracks)
         {
             List<FailedItem<Track>> failedTracks = DatabaseHelper.WriteFromList(
@@ -292,49 +291,58 @@ namespace Database
 
         public static void AddPlaylist(Playlist playlist)
         {
-            int? id = DatabaseHelper.WriteReturning<int>(
-                """
-                INSERT INTO playlist_metadata (title, description, image_file_path, playlist_type)
-                VALUES (@title, @description, @image_file_path, @playlist_type)
-                RETURNING playlist_id
-                """, 
-                command => DatabaseHelper.WritePlaylistMetadata(command, playlist)
-            );
+            lock(playlistLock)
+            {
+                int? id = DatabaseHelper.WriteReturning<int>(
+                    """
+                    INSERT INTO playlist_metadata (title, description, image_file_path, playlist_type)
+                    VALUES (@title, @description, @image_file_path, @playlist_type)
+                    RETURNING playlist_id
+                    """, 
+                    command => DatabaseHelper.WritePlaylistMetadata(command, playlist)
+                );
 
-            if (id is not null)
-                playlist.InitilizePlaylistId(id.Value);
+                if (id is not null)
+                    playlist.InitilizePlaylistId(id.Value);
+            }
         }
         
         public static void DeletePlaylist(Playlist playlist)
         {
-            bool success = DatabaseHelper.Write(
-                """
-                DELETE FROM * playlist_metadata
-                WHERE playlist_id = @playlist_id
-                """,
-                command => command.Parameters.AddWithValue("playlist_id", playlist.PlaylistId)
-            );
-            if(success)
-                Console.WriteLine($"Deleted Playlist {playlist.Title}");
+            lock(playlistLock)
+            {
+                bool success = DatabaseHelper.Write(
+                    """
+                    DELETE FROM * playlist_metadata
+                    WHERE playlist_id = @playlist_id
+                    """,
+                    command => command.Parameters.AddWithValue("playlist_id", playlist.PlaylistId)
+                );
+                if(success)
+                    Console.WriteLine($"Deleted Playlist {playlist.Title}");
+            }   
         }
 
         public static void UpdatePlaylistMetadata(Playlist playlist)
         {
-            DatabaseHelper.Write(
-                """
-                UPDATE playlist_metadata
-                SET title = @title
-                    description = @description
-                    image_file_path = @image_file_path
-                    playlist_type = @playlist_type
-                WHERE playlist_id = @playlist_id
-                """,
-                command =>
-                {
-                    DatabaseHelper.WritePlaylistMetadata(command, playlist);
-                    command.Parameters.AddWithValue("playlist_id", playlist.PlaylistId);
-                }
-            );
+            lock(playlistLock)
+            {
+               DatabaseHelper.Write(
+                    """
+                    UPDATE playlist_metadata
+                    SET title = @title
+                        description = @description
+                        image_file_path = @image_file_path
+                        playlist_type = @playlist_type
+                    WHERE playlist_id = @playlist_id
+                    """,
+                    command =>
+                    {
+                        DatabaseHelper.WritePlaylistMetadata(command, playlist);
+                        command.Parameters.AddWithValue("playlist_id", playlist.PlaylistId);
+                    }
+                ); 
+            }
         }
 
         public static void WritePlaylistEntry(SqliteCommand command, PlaylistEntry playlistEntry)
@@ -349,40 +357,43 @@ namespace Database
             if (!playlist.PlaylistId.HasValue)
                 throw new InvalidOperationException("The playlist must have a PlaylistId");
             
-            DatabaseHelper.ExecuteTransaction((connection, transaction) =>
+            lock(playlistLock)
             {
-                // Delete all tracks currently saved
-                DatabaseHelper.Write(
-                    """
-                    DELETE FROM playlist_tracks
-                    WHERE playlist_id = @playlist_id
-                    """,
-                    command => command.Parameters.AddWithValue("playlist_id", playlist.PlaylistId),
-                    connection, 
-                    transaction
-                );
-                
-                // Create playlist entries
-                List<PlaylistEntry> playlistEntries = playlist.Tracks
-                    .Select((track, index) => new PlaylistEntry(
-                        playlist.PlaylistId.Value,
-                        index, 
-                        track.TrackId
-                    ))
-                    .ToList();
+                DatabaseHelper.ExecuteTransaction((connection, transaction) =>
+                {
+                    // Delete all tracks currently saved
+                    DatabaseHelper.Write(
+                        """
+                        DELETE FROM playlist_tracks
+                        WHERE playlist_id = @playlist_id
+                        """,
+                        command => command.Parameters.AddWithValue("playlist_id", playlist.PlaylistId),
+                        connection, 
+                        transaction
+                    );
+                    
+                    // Create playlist entries
+                    List<PlaylistEntry> playlistEntries = playlist.Tracks
+                        .Select((track, index) => new PlaylistEntry(
+                            playlist.PlaylistId.Value,
+                            index, 
+                            track.TrackId
+                        ))
+                        .ToList();
 
-                // Reinsert all tracks
-                DatabaseHelper.WriteFromList(
-                    playlistEntries,
-                    """
-                    INSERT INTO playlist_tracks (playlist_id, position, track_id)
-                    VALUES (@playlist_id, @position, @track_id)
-                    """,
-                    WritePlaylistEntry,
-                    connection,
-                    transaction
-                );
-            });
+                    // Reinsert all tracks
+                    DatabaseHelper.WriteFromList(
+                        playlistEntries,
+                        """
+                        INSERT INTO playlist_tracks (playlist_id, position, track_id)
+                        VALUES (@playlist_id, @position, @track_id)
+                        """,
+                        WritePlaylistEntry,
+                        connection,
+                        transaction
+                    );
+                });
+            }
         }
 
         public static List<string> GetFilePaths()
