@@ -34,6 +34,12 @@ namespace MusicPlayerApp
             ImageFilePath = imageFilePath;
             PlaylistType = playlistType;
         }
+        public Playlist(string title, PlaylistType playlistType)
+        {
+            Console.WriteLine($"TITLE: {title}");
+            Title = title;
+            PlaylistType = playlistType;
+        }
         
         public void InitilizePlaylistId(int id)
         {

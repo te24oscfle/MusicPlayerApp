@@ -1,12 +1,11 @@
-using MusicPlayerApp;
 using Playback;
 
 namespace CommandSystem
 {
     [Command(
-        "getPlaybackState", 
+        "getplaybackstate", 
         "Prints out current track, IsPlaying, CurrentPosition, and CurrentVolume", 
-        "getPlaybackState"
+        "getplaybackstate"
     )]
     public class GetPlaybackState : ICommand
     {

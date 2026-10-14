@@ -1,6 +1,4 @@
-using System.Data.SqlTypes;
 using System.Globalization;
-using System.Transactions;
 using Microsoft.Data.Sqlite;
 using MusicPlayerApp;
 
@@ -80,11 +78,11 @@ namespace Database
                     CREATE TABLE IF NOT EXISTS playlist_metadata (
                         playlist_id INTEGER PRIMARY KEY,
                         title TEXT NOT NULL,
-                        description TEXT
-                        image_file_path TEXT
+                        description TEXT,
+                        image_file_path TEXT,
 
                         playlist_type TEXT NOT NULL DEFAULT 'manual'
-                            CHECK (playlist_type IN ('manual', 'smart'))
+                            CHECK (playlist_type IN ('manual', 'smart')),
                         
                         smart_rules TEXT
                     )
@@ -302,7 +300,7 @@ namespace Database
                 throw new ArgumentException("The transaction must belong to the provided connection.");
             
             // Create command
-            using SqliteCommand command = new SqliteCommand(sqlCommand, connection);
+            using SqliteCommand command = new SqliteCommand(sqlCommand, connection, transaction);
 
             // Invoke the configureCommand action only if it was provided
             configureCommand?.Invoke(command);
@@ -582,11 +580,11 @@ namespace Database
         }
 
         public static void WritePlaylistMetadata(SqliteCommand command, Playlist playlist)
-        {
+        {   
             command.Parameters.AddWithValue("title", playlist.Title);
-            command.Parameters.AddWithValue("description", playlist.Description);
-            command.Parameters.AddWithValue("image_file_path", playlist.ImageFilePath);
-            command.Parameters.AddWithValue("playlist_type", playlist.PlaylistType.ToString());
+            command.Parameters.AddWithValue("description", (object?)playlist.Description ?? DBNull.Value);
+            command.Parameters.AddWithValue("image_file_path", (object?)playlist.ImageFilePath ?? DBNull.Value);
+            command.Parameters.AddWithValue("playlist_type", playlist.PlaylistType.ToString().ToLower());
         }
 
         public static void WritePlaylistEntry(SqliteCommand command, PlaylistEntry playlistEntry)
