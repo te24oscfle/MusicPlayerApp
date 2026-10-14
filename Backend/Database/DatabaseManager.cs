@@ -339,13 +339,45 @@ namespace Database
             return playlists;
         }
         
+        public static Playlist? GetPlaylistFromPlaylistId(int playlistId)
+        {
+            Playlist? playlist = DatabaseHelper.Read(
+                """
+                SELECT * FROM playlist_metadata 
+                WHERE playlist_id = @playlist_id
+                """,
+                DatabaseHelper.ReadPlaylist,
+                command => command.Parameters.AddWithValue("playlist_id", playlistId)
+            );
+
+            if(playlist is null || playlist.PlaylistType is not PlaylistType.Manual)
+                return null;
+            
+            List<Track> tracks = DatabaseHelper.ReadToList(
+                """
+                SELECT track.*
+                FROM playlist_tracks AS playlist_entry
+                JOIN tracks AS track
+                    ON track.track_id = playlist_entry.track_id
+                WHERE playlist_entry.playlist_id = @playlist_id
+                ORDER BY playlist_entry.position
+                """,
+                DatabaseHelper.ReadTrack,
+                command => command.Parameters.AddWithValue("playlist_id", playlist.PlaylistId)
+            );
+            
+            playlist.AddTracks(tracks, true);
+
+            return playlist;
+        }
+
         public static void DeletePlaylist(Playlist playlist)
         {
             lock(playlistLock)
             {
                 bool success = DatabaseHelper.Write(
                     """
-                    DELETE FROM * playlist_metadata
+                    DELETE FROM playlist_metadata
                     WHERE playlist_id = @playlist_id
                     """,
                     command => command.Parameters.AddWithValue("playlist_id", playlist.PlaylistId)
@@ -362,9 +394,9 @@ namespace Database
                DatabaseHelper.Write(
                     """
                     UPDATE playlist_metadata
-                    SET title = @title
-                        description = @description
-                        image_file_path = @image_file_path
+                    SET title = @title,
+                        description = @description,
+                        image_file_path = @image_file_path,
                         playlist_type = @playlist_type
                     WHERE playlist_id = @playlist_id
                     """,

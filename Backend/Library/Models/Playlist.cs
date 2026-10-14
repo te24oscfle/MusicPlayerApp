@@ -36,7 +36,6 @@ namespace MusicPlayerApp
         }
         public Playlist(string title, PlaylistType playlistType)
         {
-            Console.WriteLine($"TITLE: {title}");
             Title = title;
             PlaylistType = playlistType;
         }
@@ -62,14 +61,15 @@ namespace MusicPlayerApp
             DatabaseManager.UpdatePlaylistMetadata(this);
         }
         
-        public void AddTracks(List<Track> tracks)
+        public void AddTracks(List<Track> tracks, bool silencePrints=false)
         {
             tracks.Select(track => track.TrackId > 0);
             
             _tracks.AddRange(tracks);
             DatabaseManager.UpdatePlaylistTracks(this);
 
-            Console.WriteLine($"Added {tracks.Count} to Playlist {Title}");
+            if (!silencePrints)
+                Console.WriteLine($"Added {tracks.Count} tracks to Playlist {Title}");
         }
 
         public void RemoveTracks(int[] indexes)
