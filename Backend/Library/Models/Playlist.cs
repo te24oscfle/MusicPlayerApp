@@ -78,7 +78,7 @@ namespace MusicPlayerApp
 
             foreach(int index in indexes)
             {
-                if (index > 0 && index < _tracks.Count)
+                if (index >= 0 && index < _tracks.Count)
                 {
                     _tracks.RemoveAt(index);
                     removedTracks++;
