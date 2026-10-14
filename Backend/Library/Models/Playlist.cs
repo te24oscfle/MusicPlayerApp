@@ -90,24 +90,36 @@ namespace MusicPlayerApp
             Console.WriteLine($"Removed {removedTracks} from Playlist {Title}");
         }
 
-        public void MoveTrack(int fromIndex, int toIndex)
+        public void MoveTracks(int[] positions, int toIndex)
         {
-            if (fromIndex == toIndex)
-                return;
-            
-            if(fromIndex < 0 || fromIndex > _tracks.Count)
-                throw new ArgumentOutOfRangeException(nameof(fromIndex));
-            
-            if (toIndex < 0 || toIndex > _tracks.Count)
+            if (toIndex < 0 || toIndex >= _tracks.Count)
                 throw new ArgumentOutOfRangeException(nameof(toIndex));
 
-            Track track = _tracks[fromIndex];
-            _tracks.RemoveAt(fromIndex);
-            _tracks.Insert(toIndex, track);
+            int[] validatedPositions = positions
+                .Distinct()
+                .Where(position => position >= 0 && position < _tracks.Count)
+                .OrderBy(position => position)
+                .ToArray();
+
+            if (validatedPositions.Length == 0)
+            {
+                Console.WriteLine("No valid positions to move");
+                return;
+            }
+                
+            List<Track> tracks = validatedPositions
+                .Select(position => _tracks[position])
+                .ToList();
+            
+            foreach(int position in validatedPositions.Reverse())
+            {
+                _tracks.RemoveAt(position);
+            }
+            
+            _tracks.InsertRange(Math.Min(toIndex, _tracks.Count), tracks);
             
             DatabaseManager.UpdatePlaylistTracks(this);
-
-            Console.WriteLine($"Moved {track.Metadata.Title} from {fromIndex} to {toIndex} in Playlist {Title}");
+            Console.WriteLine($"Moved {validatedPositions.Length} tracks to {toIndex} in Playlist {Title}");
         }
     }
 }

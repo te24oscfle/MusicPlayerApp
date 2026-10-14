@@ -1,3 +1,5 @@
+using Database;
+using MusicPlayerApp;
 using Playback;
 
 namespace CommandSystem
@@ -17,12 +19,24 @@ namespace CommandSystem
                 return Task.CompletedTask;
             }
             
-            int.TryParse(arguments[1], out int playlistId);
-            int.TryParse(arguments[1], out int fromIndex);
-            int.TryParse(arguments[2], out int toIndex);
+            int.TryParse(arguments[0], out int playlistId);
+            int.TryParse(arguments[1], out int toIndex);
+            int[] positions = arguments.Skip(2).Select(int.Parse).ToArray();
 
-            // TODO: Move track in playlist is playlistId is greater than 0
-            QueueManager.MoveTrack(fromIndex, toIndex);
+            if(playlistId > 0)
+            {
+                Playlist? playlist = DatabaseManager.GetPlaylistFromPlaylistId(playlistId);
+                if (playlist is null)
+                {
+                    Console.WriteLine($"Could not find playlist with playlistId={playlistId}");
+                    return Task.CompletedTask;
+                }
+
+                playlist.MoveTracks(positions, toIndex);
+                return Task.CompletedTask;
+            }
+            // TODO: Fix QueueManager.MoveTracks
+            QueueManager.MoveTrack(positions[0], toIndex);
 
             return Task.CompletedTask;
         }
