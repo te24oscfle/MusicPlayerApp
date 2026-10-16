@@ -183,5 +183,27 @@ namespace Playback
             Track? track = item is not null ? item.Track : null;
             return new PlaybackResult(track, true); // TODO: Create ShouldAutoPlay condition? Unsure.
         }
+
+        public static void PlayAlbum(Album album)
+        {
+            List<Track> tracks = album.GetTracks();
+            
+            ClearQueue(true);
+            AddTracksToQueue(tracks, true, false);
+            
+            PlaybackResult newPlayback = GetCurrentPlayback();
+            AudioPlayer.PlayTrackFromPlaybackResult(newPlayback);
+        }
+
+        public static void PlayPlaylist(Playlist playlist)
+        {
+            List<Track> tracks = playlist.Tracks;
+            
+            ClearQueue(true);
+            AddTracksToQueue(tracks, true, false);
+            
+            PlaybackResult newPlayback = GetCurrentPlayback();
+            AudioPlayer.PlayTrackFromPlaybackResult(newPlayback);
+        }
     }
 }

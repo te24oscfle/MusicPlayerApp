@@ -26,14 +26,7 @@ namespace CommandSystem
                 return Task.CompletedTask;
             }
 
-            List<Track> tracks = album.GetTracks();
-            
-            QueueManager.ClearQueue(true);
-            QueueManager.AddTracksToQueue(tracks, true, false);
-            //AudioPlayer.DisposeMedia();
-            
-            PlaybackResult newPlayback = QueueManager.GetCurrentPlayback();
-            AudioPlayer.PlayTrackFromPlaybackResult(newPlayback);
+            QueueManager.PlayAlbum(album);
 
             return Task.CompletedTask;
         }
