@@ -7,7 +7,7 @@ namespace CommandSystem
     [Command(
         "moveTrack", 
         "Moves track at fromIndex in the queue to toIndex in corresponding playlist. PlaylistId of 0 is equilivent to the queue", 
-        "moveTrack <playlistId> <fromIndex> <toIndex>"
+        "moveTrack <playlistId> <fromIndex...> <toIndex>"
     )]
     public class MoveTrack : ICommand
     {
@@ -20,9 +20,9 @@ namespace CommandSystem
             }
             
             int.TryParse(arguments[0], out int playlistId);
-            int.TryParse(arguments[1], out int toIndex);
-            int[] positions = arguments.Skip(2).Select(int.Parse).ToArray();
-
+            int[] positions = arguments.Skip(1).Take(arguments.Length - 2).Select(int.Parse).ToArray();
+            int.TryParse(arguments.Skip(arguments.Length - 1).FirstOrDefault(), out int toIndex);
+            
             if(playlistId > 0)
             {
                 Playlist? playlist = DatabaseManager.GetPlaylistFromPlaylistId(playlistId);
@@ -36,7 +36,7 @@ namespace CommandSystem
                 return Task.CompletedTask;
             }
             // TODO: Fix QueueManager.MoveTracks
-            QueueManager.MoveTrack(positions[0], toIndex);
+            QueueManager.MoveTracks(positions, toIndex);
 
             return Task.CompletedTask;
         }

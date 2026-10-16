@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
+using LibVLCSharp.Shared;
 using MusicPlayerApp;
 
 namespace Playback
@@ -82,36 +83,48 @@ namespace Playback
             }
         }
 
-        public static void MoveTrack(int fromIndex, int toIndex)
+        public static void MoveTracks(int[] positions, int toIndex)
         {
             lock(lockObject)
             {
-                if (fromIndex == toIndex)
-                    return;
+                if (toIndex < 0 || toIndex >= queue.Count)
+                    throw new ArgumentOutOfRangeException(nameof(toIndex));
                 
-                if (fromIndex >= queue.Count || toIndex >= queue.Count || fromIndex < 0 || toIndex < 0)
-                {
-                    Console.WriteLine("Both fromIndex and toIndex must be smaller than queue.Count and greater or equal to zero");
-                    return;
-                }
-
-                if (fromIndex == currentIndex)
-                {
-                    Console.WriteLine("Cannot move track currently being played");
-                    return;
-                }
-
                 if (toIndex <= currentIndex)
                 {
-                    Console.WriteLine("Cannot move track behind track currently being played");
+                    Console.WriteLine("Cannot move tracks behind current track");
+                    return;
+                }
+                
+                int[] validatedPositions = positions
+                    .Distinct()
+                    .Where(position => position >= 0 && position < queue.Count)
+                    .Where(position => position > currentIndex)
+                    .OrderBy(position => position)
+                    .ToArray();
+                
+                foreach(int position in validatedPositions)
+                {
+                    Console.WriteLine(position);
+                }
+
+                if (validatedPositions.Length == 0)
+                {
+                    Console.WriteLine("No valid positions to move");
                     return;
                 }
 
-                QueueItem item = queue[fromIndex];
-                queue.RemoveAt(fromIndex);
-                queue.Insert(toIndex, item);
-
-                Console.WriteLine($"Moved {item.Track.Metadata.Title} from {fromIndex} to {toIndex}");
+                List<QueueItem> items = validatedPositions
+                    .Select(position => queue[position])
+                    .ToList();
+            
+                foreach(int position in validatedPositions.Reverse())
+                {
+                    queue.RemoveAt(position);
+                }
+                
+                queue.InsertRange(Math.Min(toIndex, queue.Count), items);
+                Console.WriteLine($"Moved {validatedPositions.Length} tracks to {toIndex} in Queue");
             }
         }
 
