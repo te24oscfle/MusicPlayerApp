@@ -35,6 +35,7 @@ namespace CommandSystem
                 playlist.MoveTracks(positions, toIndex);
                 return Task.CompletedTask;
             }
+            
             // TODO: Fix QueueManager.MoveTracks
             QueueManager.MoveTracks(positions, toIndex);
 

@@ -1,6 +1,3 @@
-using System.Diagnostics;
-using System.Security.Cryptography.X509Certificates;
-using LibVLCSharp.Shared;
 using MusicPlayerApp;
 
 namespace Playback
