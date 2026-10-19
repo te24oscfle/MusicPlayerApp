@@ -44,14 +44,30 @@ namespace Playback
         
         private static void EnableShuffle()
         {
+            // Copy the queue
             _shuffledQueue = _queue.ToList();
             
             QueueItem currentItem = _shuffledQueue[currentIndex];
-            _shuffledQueue.RemoveAt(currentIndex);
-            _shuffledQueue.Shuffle();
-            _shuffledQueue.Insert(0, currentItem);
-            currentIndex = 0;
 
+            // Take the first unbroken streak of non-persistent tracks, and remove them from the shuffle pool
+            List<QueueItem> nonPersistentTracks = _shuffledQueue
+                .Skip(currentIndex + 1)
+                .TakeWhile(track => !track.IsPersistent)
+                .ToList();
+
+            // Remove first track and non persistent tracks
+            _shuffledQueue.RemoveAt(currentIndex);
+            _shuffledQueue.RemoveRange(currentIndex, nonPersistentTracks.Count);
+
+            // Shuffle queue
+            _shuffledQueue.Shuffle();
+
+            // Reinsert first tracks and non persistent tracks
+            _shuffledQueue.Insert(0, currentItem);
+            _shuffledQueue.InsertRange(1, nonPersistentTracks);
+
+            // Reset currentIndex and enable shuffle
+            currentIndex = 0;
             _shuffleState = ShuffleState.Enabled;
         }
 
@@ -211,11 +227,19 @@ namespace Playback
 
                 // Delete current track if it is not persistent
                 QueueItem? currentItem = Queue.ElementAtOrDefault(currentIndex);
-                Console.WriteLine(nameof(Queue));
                 if(currentItem is not null && !currentItem.IsPersistent)
                 {
-                    RemoveTracksFromQueue([currentIndex], true);
-                    //Queue.RemoveAt(currentIndex);
+                    if (OppositeQueue.Count > 0)
+                    {
+                        int oppositeQueueIndex = OppositeQueue.FindIndex(queueItem => 
+                            queueItem.Track == Queue[currentIndex].Track 
+                            && queueItem.IsPersistent == false
+                        );
+                        if (oppositeQueueIndex >= 0)
+                            OppositeQueue.RemoveAt(oppositeQueueIndex);
+                    }
+                    
+                    Queue.RemoveAt(currentIndex);
                 }
                 else
                 {
