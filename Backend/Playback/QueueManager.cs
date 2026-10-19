@@ -28,7 +28,7 @@ namespace Playback
     
     public static class QueueManager
     {
-        private static readonly object lockObject = new();
+        private static readonly object queueLock = new();
         
         private static List<QueueItem> _queue = new List<QueueItem>();
         private static List<QueueItem> _shuffledQueue = new List<QueueItem>();
@@ -44,54 +44,60 @@ namespace Playback
         
         private static void EnableShuffle()
         {
-            // Copy the queue
-            _shuffledQueue = _queue.ToList();
-            
-            QueueItem currentItem = _shuffledQueue[currentIndex];
+            lock(queueLock)
+            {
+                // Copy the queue
+                _shuffledQueue = _queue.ToList();
+                
+                QueueItem currentItem = _shuffledQueue[currentIndex];
 
-            // Take the first unbroken streak of non-persistent tracks, and remove them from the shuffle pool
-            List<QueueItem> nonPersistentTracks = _shuffledQueue
-                .Skip(currentIndex + 1)
-                .TakeWhile(track => !track.IsPersistent)
-                .ToList();
+                // Take the first unbroken streak of non-persistent tracks, and remove them from the shuffle pool
+                List<QueueItem> nonPersistentTracks = _shuffledQueue
+                    .Skip(currentIndex + 1)
+                    .TakeWhile(track => !track.IsPersistent)
+                    .ToList();
 
-            // Remove first track and non persistent tracks
-            _shuffledQueue.RemoveAt(currentIndex);
-            _shuffledQueue.RemoveRange(currentIndex, nonPersistentTracks.Count);
+                // Remove first track and non persistent tracks
+                _shuffledQueue.RemoveAt(currentIndex);
+                _shuffledQueue.RemoveRange(currentIndex, nonPersistentTracks.Count);
 
-            // Shuffle queue
-            _shuffledQueue.Shuffle();
+                // Shuffle queue
+                _shuffledQueue.Shuffle();
 
-            // Reinsert first tracks and non persistent tracks
-            _shuffledQueue.Insert(0, currentItem);
-            _shuffledQueue.InsertRange(1, nonPersistentTracks);
+                // Reinsert first tracks and non persistent tracks
+                _shuffledQueue.Insert(0, currentItem);
+                _shuffledQueue.InsertRange(1, nonPersistentTracks);
 
-            // Reset currentIndex and enable shuffle
-            currentIndex = 0;
-            _shuffleState = ShuffleState.Enabled;
+                // Reset currentIndex and enable shuffle
+                currentIndex = 0;
+                _shuffleState = ShuffleState.Enabled;
+            }
         }
 
         private static void DisableShuffle()
         {
-            // TODO: There may be a bug here if tracks in the queue are deleted before shuffle is disabled
-            // It may have been solved now by checking if the FindIndex called returned -1, in which case currentIndex is set to zero.
-            // It's not the greatest solution, but for now, I'll leave it as is.
-            if(currentIndex >= 0 && currentIndex < _shuffledQueue.Count)
+            lock(queueLock)
             {
-                QueueItem currentItem = _shuffledQueue[currentIndex];
-                
-                int index = _queue.FindIndex(queueItem => queueItem.Track == currentItem.Track); 
-                if (index < 0)
+                // TODO: There may be a bug here if tracks in the queue are deleted before shuffle is disabled
+                // It may have been solved now by checking if the FindIndex called returned -1, in which case currentIndex is set to zero.
+                // It's not the greatest solution, but for now, I'll leave it as is.
+                if(currentIndex >= 0 && currentIndex < _shuffledQueue.Count)
                 {
-                    // Track could not be found in the Queue. Must have been deleted.
-                    currentIndex = 0;
+                    QueueItem currentItem = _shuffledQueue[currentIndex];
+                    
+                    int index = _queue.FindIndex(queueItem => queueItem.Track == currentItem.Track); 
+                    if (index < 0)
+                    {
+                        // Track could not be found in the Queue. Must have been deleted.
+                        currentIndex = 0;
+                    }
+                    
+                    currentIndex = index;
                 }
                 
-                currentIndex = index;
-            }
-            
-            _shuffledQueue.Clear();
-            _shuffleState = ShuffleState.Disabled;
+                _shuffledQueue.Clear();
+                _shuffleState = ShuffleState.Disabled;   
+            }   
         }
         
         public static void SetLoopState(LoopState loopState)
@@ -122,7 +128,7 @@ namespace Playback
 
         public static void ClearQueue(bool clearPersistentTracks=false)
         {
-            lock(lockObject)
+            lock(queueLock)
             {
                 int tracksCleared = Queue.Count;
                 if (clearPersistentTracks)
@@ -143,7 +149,7 @@ namespace Playback
 
         public static void RemoveTracksFromQueue(int[] indexes, bool silencePrints=false)
         {
-            lock(lockObject)
+            lock(queueLock)
             {
                 int removedTracks = 0;
                 
@@ -177,7 +183,7 @@ namespace Playback
 
         public static void MoveTracks(int[] positions, int toIndex)
         {
-            lock(lockObject)
+            lock(queueLock)
             {
                 if (toIndex < 0 || toIndex >= Queue.Count)
                     throw new ArgumentOutOfRangeException(nameof(toIndex));
@@ -215,7 +221,7 @@ namespace Playback
 
         public static PlaybackResult Next()
         {
-            lock(lockObject)
+            lock(queueLock)
             {
                 // Check for empty queue
                 if (Queue.Count == 0)
@@ -266,7 +272,7 @@ namespace Playback
 
         public static PlaybackResult Previous()
         {
-            lock(lockObject)
+            lock(queueLock)
             {
                 // Check for empty queue
                 if (Queue.Count == 0)
