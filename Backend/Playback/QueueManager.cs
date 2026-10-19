@@ -17,7 +17,13 @@ namespace Playback
         Disabled,
         LoopQueue,
         LoopSingleTrack
-    }
+    };
+
+    public enum ShuffleState
+    {
+        Disabled,
+        Enabled
+    };
     
     public static class QueueManager
     {
@@ -27,13 +33,13 @@ namespace Playback
         private static List<QueueItem> _shuffledQueue = new List<QueueItem>();
         private static int currentIndex = 0;
         private static LoopState _loopState = LoopState.LoopQueue;
-        private static bool shuffleQueue = false;
+        private static ShuffleState _shuffleState = ShuffleState.Disabled;
 
-        public static List<QueueItem> Queue => !shuffleQueue ? _queue : _shuffledQueue;
+        public static List<QueueItem> Queue => _shuffleState == ShuffleState.Disabled ? _queue : _shuffledQueue;
         public static int CurrentIndex => currentIndex;
         public static LoopState LoopState => _loopState;
-        public static bool ShuffleQueue => shuffleQueue;
-
+        public static ShuffleState ShuffleState => _shuffleState;
+        
         private static void EnableShuffle()
         {
             _shuffledQueue = _queue.ToList();
@@ -44,35 +50,41 @@ namespace Playback
             _shuffledQueue.Insert(0, currentItem);
             currentIndex = 0;
 
-            shuffleQueue = true;
+            _shuffleState = ShuffleState.Enabled;
         }
 
         private static void DisableShuffle()
         {
-            // TODO: There is absolutely a bug here if tracks in the queue are deleted before shuffle is disabled
-            // Not sure how to solve it yet, as I am not entirely sure how such bug would behave
-            // For now, I'll leave it as it is, but it's not perfect.
+            // TODO: There may be a bug here if tracks in the queue are deleted before shuffle is disabled
+            // It may have been solved now by checking if the FindIndex called returned -1, in which case currentIndex is set to zero.
+            // It's not the greatest solution, but for now, I'll leave it as is.
             if(currentIndex >= 0 && currentIndex < _shuffledQueue.Count)
             {
                 QueueItem currentItem = _shuffledQueue[currentIndex];
-
+                
                 int index = _queue.FindIndex(queueItem => queueItem.Track == currentItem.Track); 
+                if (index < 0)
+                {
+                    // Track could not be found in the Queue. Must have been deleted.
+                    currentIndex = 0;
+                }
+                
                 currentIndex = index;
             }
 
-            shuffleQueue = false;
+            _shuffleState = ShuffleState.Disabled;
         }
         
-        public static void SetLoopQueue(LoopState loopState)
+        public static void SetLoopState(LoopState loopState)
         {
             _loopState = loopState;
         }
 
-        public static void SetShuffleQueue(bool value)
+        public static void SetShuffleState(ShuffleState shuffleState)
         {
-            shuffleQueue = value;
+            _shuffleState = shuffleState;
             
-            if(shuffleQueue)
+            if(_shuffleState == ShuffleState.Enabled)
                 EnableShuffle();
             else
                 DisableShuffle();
@@ -192,6 +204,7 @@ namespace Playback
 
                 // Delete current track if it is not persistent
                 QueueItem? currentItem = Queue.ElementAtOrDefault(currentIndex);
+                Console.WriteLine(nameof(Queue));
                 if(currentItem is not null && !currentItem.IsPersistent)
                 {
                     Queue.RemoveAt(currentIndex);

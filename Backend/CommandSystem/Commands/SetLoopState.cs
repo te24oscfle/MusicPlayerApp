@@ -3,11 +3,11 @@ using Playback;
 namespace CommandSystem
 {
     [Command(
-        "loopState", 
+        "setLoopState", 
         "Set loop state. 0: Disabled. 1: Loop Queue. 2. Loop Single Track. Provide no argument to get current loop state", 
-        "loopState <loopState>"
+        "setLoopState <loopState>"
     )]
-    public class SetLoop : ICommand
+    public class SetLoopState : ICommand
     {
         public Task Execute(string[] arguments)
         {
@@ -25,7 +25,7 @@ namespace CommandSystem
                 return Task.CompletedTask;
             }
             LoopState loopState = (LoopState)loopStateId;
-            QueueManager.SetLoopQueue(loopState);
+            QueueManager.SetLoopState(loopState);
 
             return Task.CompletedTask;
         }
