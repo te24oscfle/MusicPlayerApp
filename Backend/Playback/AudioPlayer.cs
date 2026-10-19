@@ -9,7 +9,7 @@ namespace Playback
         float Position,
         int Volume
     );
-    
+
     public static class AudioPlayer
     {
         private static LibVLC vlcInstance = new LibVLC();

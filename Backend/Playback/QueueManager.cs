@@ -11,6 +11,13 @@ namespace Playback
         Track? Track,
         bool ShouldAutoPlay
     );
+
+    public enum LoopState
+    {
+        Disabled,
+        LoopQueue,
+        LoopSingleTrack
+    }
     
     public static class QueueManager
     {
@@ -18,14 +25,24 @@ namespace Playback
         
         private static List<QueueItem> queue = new List<QueueItem>();
         private static int currentIndex = 0;
-        private static bool loopQueue = true;
+        private static LoopState _loopState = LoopState.LoopQueue;
         private static bool shuffleQueue = false;
 
         public static List<QueueItem> Queue => queue;
         public static int CurrentIndex => currentIndex;
-        public static bool LoopQueue => loopQueue;
+        public static LoopState LoopQueue => _loopState;
         public static bool ShuffleQueue => shuffleQueue;
 
+        public static void SetLoopQueue(LoopState loopState)
+        {
+            _loopState = loopState;
+        }
+
+        public static void SetShuffleQueue(bool value)
+        {
+            shuffleQueue = value;
+        }
+        
         public static void AddTracksToQueue(List<Track> tracks, bool isPersistent, bool addToFront=false)
         {
             List<QueueItem> queueItems = tracks.Select(track => new QueueItem(track, isPersistent)).ToList();
@@ -99,11 +116,6 @@ namespace Playback
                     .Where(position => position > currentIndex)
                     .OrderBy(position => position)
                     .ToArray();
-                
-                foreach(int position in validatedPositions)
-                {
-                    Console.WriteLine(position);
-                }
 
                 if (validatedPositions.Length == 0)
                 {
@@ -116,9 +128,7 @@ namespace Playback
                     .ToList();
             
                 foreach(int position in validatedPositions.Reverse())
-                {
                     queue.RemoveAt(position);
-                }
                 
                 queue.InsertRange(Math.Min(toIndex, queue.Count), items);
                 Console.WriteLine($"Moved {validatedPositions.Length} tracks to {toIndex} in Queue");
@@ -131,9 +141,11 @@ namespace Playback
             {
                 // Check for empty queue
                 if (queue.Count == 0)
-                {
                     return new PlaybackResult(null, false);
-                }
+
+                // Restart playback of current track is LoopSingleTrack is enabled.
+                if(_loopState == LoopState.LoopSingleTrack)
+                    return new PlaybackResult(queue[currentIndex].Track, true);
 
                 // Delete current track if it is not persistent
                 QueueItem? currentItem = queue.ElementAtOrDefault(currentIndex);
@@ -156,11 +168,11 @@ namespace Playback
 
                 // currentIndex is now pointing at the next track
                 QueueItem? nextItem = queue.ElementAtOrDefault(currentIndex);
-                Track? nextTrack = nextItem is not null ? nextItem.Track : null;
+                Track? nextTrack = nextItem?.Track;
 
                 // If the next track is the start of the queue, it means we are starting the queue.
                 // We only want to auto play the start of the queue again if looping is enabled.
-                return new PlaybackResult(nextTrack, currentIndex == 0 ? loopQueue : true);
+                return new PlaybackResult(nextTrack, currentIndex == 0 ? _loopState == LoopState.LoopQueue : true);
             }
         }
 
@@ -174,11 +186,15 @@ namespace Playback
                     return new PlaybackResult(null, false);
                 }
 
+                // Restart playback of current track is LoopSingleTrack is enabled.
+                if(_loopState == LoopState.LoopSingleTrack)
+                    return new PlaybackResult(queue[currentIndex].Track, true);
+
                 currentIndex--;
                 if(currentIndex < 0)
                 {
                     // We reached the end of the queue.
-                    currentIndex = loopQueue ? queue.Count - 1 : 0;
+                    currentIndex = _loopState == LoopState.LoopQueue ? queue.Count - 1 : 0;
                 }
 
                 QueueItem? previousItem = queue.ElementAtOrDefault(currentIndex);
