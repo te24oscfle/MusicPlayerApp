@@ -23,16 +23,46 @@ namespace Playback
     {
         private static readonly object lockObject = new();
         
-        private static List<QueueItem> queue = new List<QueueItem>();
+        private static List<QueueItem> _queue = new List<QueueItem>();
+        private static List<QueueItem> _shuffledQueue = new List<QueueItem>();
         private static int currentIndex = 0;
         private static LoopState _loopState = LoopState.LoopQueue;
         private static bool shuffleQueue = false;
 
-        public static List<QueueItem> Queue => queue;
+        public static List<QueueItem> Queue => !shuffleQueue ? _queue : _shuffledQueue;
         public static int CurrentIndex => currentIndex;
         public static LoopState LoopState => _loopState;
         public static bool ShuffleQueue => shuffleQueue;
 
+        private static void EnableShuffle()
+        {
+            _shuffledQueue = _queue.ToList();
+            
+            QueueItem currentItem = _shuffledQueue[currentIndex];
+            _shuffledQueue.RemoveAt(currentIndex);
+            _shuffledQueue.Shuffle();
+            _shuffledQueue.Insert(0, currentItem);
+            currentIndex = 0;
+
+            shuffleQueue = true;
+        }
+
+        private static void DisableShuffle()
+        {
+            // TODO: There is absolutely a bug here if tracks in the queue are deleted before shuffle is disabled
+            // Not sure how to solve it yet, as I am not entirely sure how such bug would behave
+            // For now, I'll leave it as it is, but it's not perfect.
+            if(currentIndex >= 0 && currentIndex < _shuffledQueue.Count)
+            {
+                QueueItem currentItem = _shuffledQueue[currentIndex];
+
+                int index = _queue.FindIndex(queueItem => queueItem.Track == currentItem.Track); 
+                currentIndex = index;
+            }
+
+            shuffleQueue = false;
+        }
+        
         public static void SetLoopQueue(LoopState loopState)
         {
             _loopState = loopState;
@@ -41,15 +71,20 @@ namespace Playback
         public static void SetShuffleQueue(bool value)
         {
             shuffleQueue = value;
+            
+            if(shuffleQueue)
+                EnableShuffle();
+            else
+                DisableShuffle();
         }
         
         public static void AddTracksToQueue(List<Track> tracks, bool isPersistent, bool addToFront=false)
         {
             List<QueueItem> queueItems = tracks.Select(track => new QueueItem(track, isPersistent)).ToList();
-            if (!addToFront || queue.Count == 0)
-                queue.AddRange(queueItems);
+            if (!addToFront || Queue.Count == 0)
+                Queue.AddRange(queueItems);
             else
-                queue.InsertRange(currentIndex + 1, queueItems);
+                Queue.InsertRange(currentIndex + 1, queueItems);
 
             Console.WriteLine($"Added {tracks.Count} tracks");
         }
@@ -58,15 +93,23 @@ namespace Playback
         {
             lock(lockObject)
             {
-                int tracksCleared = queue.Count;
+                int tracksCleared = Queue.Count;
                 if (clearPersistentTracks)
                 {
-                    queue.Clear();
+                    _queue.Clear();
+                    _shuffledQueue.Clear();
                     currentIndex = 0;
                 }
                 else
-                    tracksCleared = queue.RemoveAll(queueItem => queueItem.IsPersistent == false && queueItem != queue[currentIndex]);
-                
+                {
+                    tracksCleared = Queue.RemoveAll(queueItem => queueItem.IsPersistent == false && queueItem != _queue[currentIndex]);
+                    
+                    // This is cursed. We call RemoveAll on both queues even though one of these has already been cleared from the statement above.
+                    // This is all to avoid doing a weird if statement.
+                    _queue.RemoveAll(queueItem => queueItem.IsPersistent == false && queueItem != _queue[currentIndex]);
+                    _shuffledQueue.RemoveAll(queueItem => queueItem.IsPersistent == false && queueItem != _queue[currentIndex]);
+                }
+                    
                 Console.WriteLine($"Cleared {tracksCleared} tracks");
             }
         }
@@ -87,9 +130,9 @@ namespace Playback
                     // Index must be greater or equal to zero to prevent Index out of range
                     // Index must be smaller than queue length to prevent Index out of range
                     // Index must be greater than currentIndex to prevent currentIndex from shifting
-                    if (index < 0 || index > queue.Count || index <= currentIndex)
+                    if (index < 0 || index > Queue.Count || index <= currentIndex)
                         continue;
-                    queue.RemoveAt(index);
+                    Queue.RemoveAt(index);
                     removedTracks++;
                 }
 
@@ -101,7 +144,7 @@ namespace Playback
         {
             lock(lockObject)
             {
-                if (toIndex < 0 || toIndex >= queue.Count)
+                if (toIndex < 0 || toIndex >= Queue.Count)
                     throw new ArgumentOutOfRangeException(nameof(toIndex));
                 
                 if (toIndex <= currentIndex)
@@ -112,7 +155,7 @@ namespace Playback
                 
                 int[] validatedPositions = positions
                     .Distinct()
-                    .Where(position => position >= 0 && position < queue.Count)
+                    .Where(position => position >= 0 && position < Queue.Count)
                     .Where(position => position > currentIndex)
                     .OrderBy(position => position)
                     .ToArray();
@@ -124,13 +167,13 @@ namespace Playback
                 }
 
                 List<QueueItem> items = validatedPositions
-                    .Select(position => queue[position])
+                    .Select(position => Queue[position])
                     .ToList();
             
                 foreach(int position in validatedPositions.Reverse())
-                    queue.RemoveAt(position);
+                    Queue.RemoveAt(position);
                 
-                queue.InsertRange(Math.Min(toIndex, queue.Count), items);
+                Queue.InsertRange(Math.Min(toIndex, Queue.Count), items);
                 Console.WriteLine($"Moved {validatedPositions.Length} tracks to {toIndex} in Queue");
             }
         }
@@ -140,18 +183,18 @@ namespace Playback
             lock(lockObject)
             {
                 // Check for empty queue
-                if (queue.Count == 0)
+                if (Queue.Count == 0)
                     return new PlaybackResult(null, false);
 
                 // Restart playback of current track is LoopSingleTrack is enabled.
                 if(_loopState == LoopState.LoopSingleTrack)
-                    return new PlaybackResult(queue[currentIndex].Track, true);
+                    return new PlaybackResult(Queue[currentIndex].Track, true);
 
                 // Delete current track if it is not persistent
-                QueueItem? currentItem = queue.ElementAtOrDefault(currentIndex);
+                QueueItem? currentItem = Queue.ElementAtOrDefault(currentIndex);
                 if(currentItem is not null && !currentItem.IsPersistent)
                 {
-                    queue.RemoveAt(currentIndex);
+                    Queue.RemoveAt(currentIndex);
                 }
                 else
                 {
@@ -160,14 +203,14 @@ namespace Playback
                     currentIndex++;
                 }
 
-                if(currentIndex >= queue.Count)
+                if(currentIndex >= Queue.Count)
                 {
                     // We reached the end of the queue.
                     currentIndex = 0;
                 }
 
                 // currentIndex is now pointing at the next track
-                QueueItem? nextItem = queue.ElementAtOrDefault(currentIndex);
+                QueueItem? nextItem = Queue.ElementAtOrDefault(currentIndex);
                 Track? nextTrack = nextItem?.Track;
 
                 // If the next track is the start of the queue, it means we are starting the queue.
@@ -181,23 +224,23 @@ namespace Playback
             lock(lockObject)
             {
                 // Check for empty queue
-                if (queue.Count == 0)
+                if (Queue.Count == 0)
                 {
                     return new PlaybackResult(null, false);
                 }
 
                 // Restart playback of current track is LoopSingleTrack is enabled.
                 if(_loopState == LoopState.LoopSingleTrack)
-                    return new PlaybackResult(queue[currentIndex].Track, true);
+                    return new PlaybackResult(Queue[currentIndex].Track, true);
 
                 currentIndex--;
                 if(currentIndex < 0)
                 {
                     // We reached the end of the queue.
-                    currentIndex = _loopState == LoopState.LoopQueue ? queue.Count - 1 : 0;
+                    currentIndex = _loopState == LoopState.LoopQueue ? Queue.Count - 1 : 0;
                 }
 
-                QueueItem? previousItem = queue.ElementAtOrDefault(currentIndex);
+                QueueItem? previousItem = Queue.ElementAtOrDefault(currentIndex);
                 Track? previousTrack = previousItem is not null ? previousItem.Track : null;
                 return new PlaybackResult(previousTrack, true); // TODO: Create better ShouldAutoPlay condition depending on if loopQueue is enabled.
             }
@@ -205,7 +248,7 @@ namespace Playback
 
         public static PlaybackResult GetCurrentPlayback()
         {
-            QueueItem? item = queue.ElementAtOrDefault(currentIndex);
+            QueueItem? item = Queue.ElementAtOrDefault(currentIndex);
             Track? track = item is not null ? item.Track : null;
             return new PlaybackResult(track, true); // TODO: Create ShouldAutoPlay condition? Unsure.
         }
