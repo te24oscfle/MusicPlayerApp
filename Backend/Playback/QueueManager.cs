@@ -1,3 +1,4 @@
+using CommandSystem;
 using MusicPlayerApp;
 
 namespace Playback
@@ -34,8 +35,9 @@ namespace Playback
         private static int currentIndex = 0;
         private static LoopState _loopState = LoopState.LoopQueue;
         private static ShuffleState _shuffleState = ShuffleState.Disabled;
-
+        
         public static List<QueueItem> Queue => _shuffleState == ShuffleState.Disabled ? _queue : _shuffledQueue;
+        public static List<QueueItem> OppositeQueue => _shuffleState == ShuffleState.Enabled ? _queue : _shuffledQueue;
         public static int CurrentIndex => currentIndex;
         public static LoopState LoopState => _loopState;
         public static ShuffleState ShuffleState => _shuffleState;
@@ -71,7 +73,8 @@ namespace Playback
                 
                 currentIndex = index;
             }
-
+            
+            _shuffledQueue.Clear();
             _shuffleState = ShuffleState.Disabled;
         }
         
@@ -115,18 +118,14 @@ namespace Playback
                 else
                 {
                     tracksCleared = Queue.RemoveAll(queueItem => queueItem.IsPersistent == false && queueItem != _queue[currentIndex]);
-                    
-                    // This is cursed. We call RemoveAll on both queues even though one of these has already been cleared from the statement above.
-                    // This is all to avoid doing a weird if statement.
-                    _queue.RemoveAll(queueItem => queueItem.IsPersistent == false && queueItem != _queue[currentIndex]);
-                    _shuffledQueue.RemoveAll(queueItem => queueItem.IsPersistent == false && queueItem != _queue[currentIndex]);
+                    OppositeQueue.RemoveAll(queueItem => queueItem.IsPersistent == false && queueItem != _queue[currentIndex]);
                 }
                     
                 Console.WriteLine($"Cleared {tracksCleared} tracks");
             }
         }
 
-        public static void RemoveTracksFromQueue(int[] indexes)
+        public static void RemoveTracksFromQueue(int[] indexes, bool silencePrints=false)
         {
             lock(lockObject)
             {
@@ -144,11 +143,19 @@ namespace Playback
                     // Index must be greater than currentIndex to prevent currentIndex from shifting
                     if (index < 0 || index > Queue.Count || index <= currentIndex)
                         continue;
+                    
+                    if (OppositeQueue.Count > 0)
+                    {
+                        int oppositeQueueIndex = OppositeQueue.FindIndex(queueItem => queueItem.Track == Queue[index].Track);
+                        OppositeQueue.RemoveAt(oppositeQueueIndex);
+                    }
+                    
                     Queue.RemoveAt(index);
                     removedTracks++;
                 }
 
-                Console.WriteLine($"Removed {removedTracks} tracks from queue");   
+                if (!silencePrints)
+                    Console.WriteLine($"Removed {removedTracks} tracks from queue");   
             }
         }
 
@@ -207,7 +214,8 @@ namespace Playback
                 Console.WriteLine(nameof(Queue));
                 if(currentItem is not null && !currentItem.IsPersistent)
                 {
-                    Queue.RemoveAt(currentIndex);
+                    RemoveTracksFromQueue([currentIndex], true);
+                    //Queue.RemoveAt(currentIndex);
                 }
                 else
                 {
