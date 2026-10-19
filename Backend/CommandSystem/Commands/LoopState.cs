@@ -3,9 +3,9 @@ using Playback;
 namespace CommandSystem
 {
     [Command(
-        "setLoop", 
-        "Set loop state. 0: Disabled. 1: Loop Queue. 2. Loop Single Track", 
-        "setLoop <loopState>"
+        "loopState", 
+        "Set loop state. 0: Disabled. 1: Loop Queue. 2. Loop Single Track. Provide no argument to get current loop state", 
+        "loopState <loopState>"
     )]
     public class SetLoop : ICommand
     {
@@ -13,8 +13,7 @@ namespace CommandSystem
         {
             if (arguments.Length == 0)
             {
-                Console.WriteLine("No loop state provided.");
-                Console.WriteLine("Valid loop states: \n0: Disabled. 1: Loop Queue. 2. Loop Single Track");
+                Console.WriteLine($"Current loop state: {QueueManager.LoopState}"); 
                 return Task.CompletedTask;  
             }
             

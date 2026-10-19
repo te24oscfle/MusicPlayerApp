@@ -30,7 +30,7 @@ namespace Playback
 
         public static List<QueueItem> Queue => queue;
         public static int CurrentIndex => currentIndex;
-        public static LoopState LoopQueue => _loopState;
+        public static LoopState LoopState => _loopState;
         public static bool ShuffleQueue => shuffleQueue;
 
         public static void SetLoopQueue(LoopState loopState)
