@@ -39,7 +39,6 @@ namespace Database
             List<SqliteCommand> commands = new List<SqliteCommand>
             {
                 // Tracks table
-
                 new SqliteCommand(
                     """
                     CREATE TABLE IF NOT EXISTS tracks (
@@ -50,6 +49,7 @@ namespace Database
                         artist TEXT NOT NULL,
                         album TEXT NOT NULL,
                         album_artist TEXT NOT NULL,
+                        album_cover_id INTEGER NOT NULL,
                         track_number INTEGER,
                         disc_number INTEGER,
                         duration_seconds INTEGER,
@@ -66,9 +66,21 @@ namespace Database
                         album_id INTEGER PRIMARY KEY,
                         album_title TEXT NOT NULL,
                         album_artist TEXT NOT NULL,
+                        album_cover_id INTEGER NOT NULL,
                         track_count INTEGER,
                         disc_count INTEGER,
                         duration_seconds INTEGER
+                    )
+                    """, connection),
+                
+                // Album Covers table
+                new SqliteCommand(
+                    """
+                    CREATE TABLE IF NOT EXISTS album_covers (
+                        artwork_id INTEGER PRIMARY KEY,
+                        image_data BLOB NOT NULL,
+                        mime_type TEXT NOT NULL,
+                        hash TEXT NOT NULL UNIQUE
                     )
                     """, connection),
                 
