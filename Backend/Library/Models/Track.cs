@@ -6,6 +6,7 @@ namespace MusicPlayerApp
         public string Artist { get; }
         public string Album { get; }
         public string AlbumArtist { get; }
+        public AlbumCover? AlbumCover { get; internal set; }
         public int TrackNumber { get; }
         public int DiscNumber { get; }
         public int DurationSeconds { get; }
@@ -72,6 +73,14 @@ namespace MusicPlayerApp
 
         public Track(int trackId, string filePath) 
             : this(trackId, filePath, 0, new TrackMetadata(new ATL.Track(filePath))) {}
+        
+        public void InitilizeAlbumCover(AlbumCover albumCover)
+        {
+            if(Metadata.AlbumCover is not null)
+                throw new InvalidOperationException("The AlbumCover is already initilized.");
+            
+            Metadata.AlbumCover = albumCover;
+        }
         
         public override bool Equals(object? obj)
         {

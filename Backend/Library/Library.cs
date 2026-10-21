@@ -1,4 +1,5 @@
 using System.Threading.RateLimiting;
+using ATL;
 using Database;
 
 namespace MusicPlayerApp
@@ -118,6 +119,34 @@ namespace MusicPlayerApp
                     newAlbumKeys.Add(albumKey);
                 }
 
+                // Create new album covers
+                Dictionary<string, AlbumCover> newAlbumCovers = new Dictionary<string, AlbumCover>();
+                
+                foreach(Track track in newTracks)
+                {
+                    ATL.Track metadata = new ATL.Track(track.FilePath);
+                    foreach(PictureInfo pictureInfo in metadata.EmbeddedPictures)
+                    {
+                        // TODO: Add more robust system to set priority to certain types of pictures.
+                        if(pictureInfo.PicType != PictureInfo.PIC_TYPE.Front )
+                            continue;
+                        
+                        string hash = AlbumCover.GetHashFromImageData(pictureInfo.PictureData);
+                        AlbumCover albumCover;
+                        if(!newAlbumCovers.ContainsKey(hash))
+                        {
+                            albumCover = new AlbumCover(pictureInfo);
+                            newAlbumCovers.Add(hash, albumCover);
+                        } 
+                        else
+                        {
+                            albumCover = newAlbumCovers[hash];
+                        };
+
+                        track.InitilizeAlbumCover(albumCover);
+                    }
+                }
+
                 // Create new albums
                 List<Album> newAlbums = new List<Album>();
                 foreach(string albumKey in newAlbumKeys)
@@ -133,12 +162,17 @@ namespace MusicPlayerApp
 
                     newAlbums.Add(album);
                 }
+
+                // Add album covers to database
+                DatabaseManager.AddAlbumCovers(newAlbumCovers.Values.ToList());
                 
+                // Add albums to database, which also adds each track in respective album
                 foreach(Album album in newAlbums)
                 {
                     DatabaseManager.AddAlbum(album);
                 }
 
+                // Add tracks without album to database
                 DatabaseManager.AddTracks(
                     newTracks.Where(
                         track => 
@@ -146,6 +180,7 @@ namespace MusicPlayerApp
                         .ToList()
                     );
                 
+                // Update track and album cache
                 LoadLibraryFromDatabase();
             };
         }

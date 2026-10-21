@@ -18,6 +18,7 @@ namespace Database
                     artist,
                     album,
                     album_artist,
+                    album_cover_id,
                     track_number,
                     disc_number,
                     duration_seconds,
@@ -32,6 +33,7 @@ namespace Database
                     @artist,
                     @album,
                     @album_artist,
+                    @album_cover_id,
                     @track_number,
                     @disc_number,
                     @duration_seconds,
@@ -286,6 +288,23 @@ namespace Database
         public static int GetAlbumIdFromAlbum(string albumTitle, string albumArtist)
         {
             return GetAlbumIdFromAlbum(new Album(albumTitle, albumArtist));
+        }
+
+        public static void AddAlbumCovers(List<AlbumCover> albumCovers)
+        {
+            DatabaseHelper.ExecuteTransaction((connection, transaction) =>
+            {
+                DatabaseHelper.WriteFromList(
+                    albumCovers, 
+                    """
+                    INSERT INTO album_covers (image_data, mime_type, hash),
+                    VALUES (@image_data, @mime_type, @hash)
+                    """,
+                    DatabaseHelper.WriteAlbumCover,
+                    connection,
+                    transaction
+                );
+            });
         }
 
         public static void AddPlaylist(Playlist playlist)

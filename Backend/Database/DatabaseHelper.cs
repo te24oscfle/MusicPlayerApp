@@ -77,7 +77,7 @@ namespace Database
                 new SqliteCommand(
                     """
                     CREATE TABLE IF NOT EXISTS album_covers (
-                        artwork_id INTEGER PRIMARY KEY,
+                        album_cover_id INTEGER PRIMARY KEY,
                         image_data BLOB NOT NULL,
                         mime_type TEXT NOT NULL,
                         hash TEXT NOT NULL UNIQUE
@@ -530,6 +530,12 @@ namespace Database
 
             if (shouldUpdate)
                 track.ShouldUpdate = true;
+            else
+            {
+                AlbumCover? albumCover = GetAlbumCoverFromId(reader.GetInt32(reader.GetOrdinal("album_cover_id")));
+                if(albumCover is not null)
+                    track.InitilizeAlbumCover(albumCover); 
+            }
             
             return track;
         }
@@ -545,6 +551,7 @@ namespace Database
             command.Parameters.AddWithValue("artist", metadata.Artist);
             command.Parameters.AddWithValue("album", metadata.Album);
             command.Parameters.AddWithValue("album_artist", metadata.AlbumArtist);
+            command.Parameters.AddWithValue("album_cover_id", metadata.AlbumCover?.AlbumCoverId ?? 0);
             command.Parameters.AddWithValue("track_number", metadata.TrackNumber);
             command.Parameters.AddWithValue("disc_number", metadata.DiscNumber);
             command.Parameters.AddWithValue("duration_seconds", metadata.DurationSeconds);
@@ -568,6 +575,36 @@ namespace Database
         {
             command.Parameters.AddWithValue("album_title", album.Title);
             command.Parameters.AddWithValue("album_artist", album.Artist);
+        }
+
+        public static AlbumCover ReadAlbumCover(SqliteDataReader reader)
+        {
+            AlbumCover albumCover = new AlbumCover(
+                reader.GetInt32(reader.GetOrdinal("album_cover_id")),
+                reader.GetFieldValue<byte[]>(reader.GetOrdinal("image_data")),
+                reader.GetString(reader.GetOrdinal("mime_type")),
+                reader.GetString(reader.GetOrdinal("hash"))
+            );
+
+            return albumCover;
+        }
+
+        public static void WriteAlbumCover(SqliteCommand command, AlbumCover albumCover)
+        {
+            command.Parameters.AddWithValue("image_data", albumCover.ImageData);
+            command.Parameters.AddWithValue("mime_type", albumCover.MimeType);
+            command.Parameters.AddWithValue("hash", albumCover.Hash);
+        }
+
+        public static AlbumCover? GetAlbumCoverFromId(int albumCoverId)
+        {
+            return Read(
+                """
+                SELECT * WHERE album_cover_id = @album_cover_id
+                """,
+                ReadAlbumCover,
+                command => command.Parameters.AddWithValue("album_cover_id", albumCoverId)
+            );
         }
 
         public static Playlist ReadPlaylist(SqliteDataReader reader)

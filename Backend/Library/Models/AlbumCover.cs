@@ -25,7 +25,7 @@ namespace MusicPlayerApp
             Hash = GetHashFromImageData(pictureInfo.PictureData);
         }
 
-        private static string GetHashFromImageData(byte[] imageData)
+        public static string GetHashFromImageData(byte[] imageData)
         {
             return Convert.ToHexString(SHA256.HashData(imageData));
         }
