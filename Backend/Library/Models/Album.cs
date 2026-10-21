@@ -5,22 +5,32 @@ namespace MusicPlayerApp
         public int AlbumId;
         public string Title;
         public string Artist;
+        public AlbumCover? AlbumCover { get; private set; }
         public Dictionary<int, List<Track>> Discs;
 
-        public Album(int albumId, string title, string artist, Dictionary<int, List<Track>> discs)
+        public Album(int albumId, string title, string artist, AlbumCover? albumCover, Dictionary<int, List<Track>> discs)
         {
             AlbumId = albumId;
             Title = title;
             Artist = artist;
+            AlbumCover = albumCover;
             Discs = discs;
         }
         
         public Album(int albumId, string title, string artist)
-            : this(albumId, title, artist, new Dictionary<int, List<Track>>()) {}
+            : this(albumId, title, artist, null, new Dictionary<int, List<Track>>()) {}
 
         public Album(string title, string artist)
-            : this(0, title, artist, new Dictionary<int, List<Track>>()) {}
+            : this(0, title, artist, null, new Dictionary<int, List<Track>>()) {}
 
+        public void InitilizeAlbumCover(AlbumCover albumCover)
+        {
+            if(AlbumCover is not null)
+                throw new InvalidOperationException("The AlbumCover is already initilized.");
+            
+            AlbumCover = albumCover;
+        }
+        
         public void AddTrack(Track track)
         {
             // Check if disc exists

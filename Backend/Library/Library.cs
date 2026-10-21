@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.RateLimiting;
 using ATL;
 using Database;
@@ -115,7 +116,7 @@ namespace MusicPlayerApp
                         continue;
                     }
 
-                    // If albumKey already exists, nothing will happen as HastSets do not allow for dupliacte values
+                    // If albumKey already exists, nothing will happen as HashSets do not allow for dupliacte values
                     newAlbumKeys.Add(albumKey);
                 }
 
@@ -128,22 +129,33 @@ namespace MusicPlayerApp
                     foreach(PictureInfo pictureInfo in metadata.EmbeddedPictures)
                     {
                         // TODO: Add more robust system to set priority to certain types of pictures.
-                        if(pictureInfo.PicType != PictureInfo.PIC_TYPE.Front )
+                        if(pictureInfo.PicType != PictureInfo.PIC_TYPE.Front)
                             continue;
                         
+                        // Get Album cover hash to prevent duplicate album cover entries
                         string hash = AlbumCover.GetHashFromImageData(pictureInfo.PictureData);
                         AlbumCover albumCover;
                         if(!newAlbumCovers.ContainsKey(hash))
                         {
+                            // New album cover, add to list   
                             albumCover = new AlbumCover(pictureInfo);
                             newAlbumCovers.Add(hash, albumCover);
                         } 
                         else
                         {
+                            // This album cover already exists
                             albumCover = newAlbumCovers[hash];
-                        };
+                        }
 
-                        track.InitilizeAlbumCover(albumCover);
+                        // Initilize track with album cover
+                        try
+                        {
+                            track.InitilizeAlbumCover(albumCover);
+                        } catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+                        
                     }
                 }
 
@@ -160,6 +172,12 @@ namespace MusicPlayerApp
                     Album album = new Album(albumTitle, albumArtist);
                     album.AddTracks(albumTracks);
 
+                    AlbumCover? albumCover = album.GetTracks().FirstOrDefault()!.Metadata.AlbumCover;
+                    if(albumCover is not null)
+                    {
+                       album.InitilizeAlbumCover(albumCover); 
+                    }
+                    
                     newAlbums.Add(album);
                 }
 

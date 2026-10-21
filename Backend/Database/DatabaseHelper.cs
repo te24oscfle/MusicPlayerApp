@@ -444,7 +444,7 @@ namespace Database
                 throw new ArgumentException("The transaction must belong to the provided connection.");
             
             // Create command
-            using SqliteCommand command = new SqliteCommand(sqlCommand, connection);
+            using SqliteCommand command = new SqliteCommand(sqlCommand, connection, transaction);
 
             // Invoke the configureCommand action only if it was provided
             configureCommand?.Invoke(command);
@@ -544,6 +544,8 @@ namespace Database
         {
             TrackMetadata metadata = track.Metadata;
 
+            int albumCoverId = metadata.AlbumCover?.AlbumCoverId ?? 0;
+
             command.Parameters.AddWithValue("file_path", track.FilePath);
             command.Parameters.AddWithValue("album_id", track.AlbumId);
             
@@ -551,7 +553,7 @@ namespace Database
             command.Parameters.AddWithValue("artist", metadata.Artist);
             command.Parameters.AddWithValue("album", metadata.Album);
             command.Parameters.AddWithValue("album_artist", metadata.AlbumArtist);
-            command.Parameters.AddWithValue("album_cover_id", metadata.AlbumCover?.AlbumCoverId ?? 0);
+            command.Parameters.AddWithValue("album_cover_id", albumCoverId);
             command.Parameters.AddWithValue("track_number", metadata.TrackNumber);
             command.Parameters.AddWithValue("disc_number", metadata.DiscNumber);
             command.Parameters.AddWithValue("duration_seconds", metadata.DurationSeconds);
@@ -568,13 +570,20 @@ namespace Database
                 reader.GetString(reader.GetOrdinal("album_artist"))
             );
 
+            AlbumCover? albumCover = GetAlbumCoverFromId(reader.GetInt32(reader.GetOrdinal("album_cover_id")));
+            if(albumCover is not null)
+                album.InitilizeAlbumCover(albumCover);
+            
             return album;
         }
         
         public static void WriteAlbum(SqliteCommand command, Album album)
         {
+            int albumCoverId = album.AlbumCover?.AlbumCoverId ?? 0;
+            
             command.Parameters.AddWithValue("album_title", album.Title);
             command.Parameters.AddWithValue("album_artist", album.Artist);
+            command.Parameters.AddWithValue("album_cover_id", albumCoverId);
         }
 
         public static AlbumCover ReadAlbumCover(SqliteDataReader reader)
@@ -600,7 +609,8 @@ namespace Database
         {
             return Read(
                 """
-                SELECT * WHERE album_cover_id = @album_cover_id
+                SELECT * FROM album_covers
+                WHERE album_cover_id = @album_cover_id
                 """,
                 ReadAlbumCover,
                 command => command.Parameters.AddWithValue("album_cover_id", albumCoverId)

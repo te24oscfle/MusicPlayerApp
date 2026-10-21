@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using MusicPlayerApp;
 
 namespace Database
@@ -6,6 +7,8 @@ namespace Database
     {
         private static readonly object playlistLock = new();
         
+        #region Tracks
+
         public static void AddTracks(List<Track> tracks)
         {
             List<FailedItem<Track>> failedTracks = DatabaseHelper.WriteFromList(
@@ -148,19 +151,30 @@ namespace Database
             }
         }
 
+        public static List<string> GetFilePaths()
+        {
+            return DatabaseHelper.ReadToList(
+                """
+                SELECT file_path FROM tracks
+                """,
+                reader => 
+                    reader.GetString(reader.GetOrdinal("file_path"))
+            );
+        }
+
+        #endregion
+
+        #region Albums
+
         public static int AddAlbum(Album album)
         {
             // Create the album
             DatabaseHelper.Write(
                 """
-                INSERT INTO albums (album_title, album_artist)
-                VALUES (@album_title, @album_artist)
+                INSERT INTO albums (album_title, album_artist, album_cover_id)
+                VALUES (@album_title, @album_artist, @album_cover_id)
                 """,
-                command => // TODO: Create WriteAlbum factory function?
-                {
-                    command.Parameters.AddWithValue("album_title", album.Title);
-                    command.Parameters.AddWithValue("album_artist", album.Artist);
-                }
+                command => DatabaseHelper.WriteAlbum(command, album)
             );
 
             // Get the albumId
@@ -290,22 +304,65 @@ namespace Database
             return GetAlbumIdFromAlbum(new Album(albumTitle, albumArtist));
         }
 
+        #endregion
+
+        #region AlbumCovers
+
         public static void AddAlbumCovers(List<AlbumCover> albumCovers)
         {
             DatabaseHelper.ExecuteTransaction((connection, transaction) =>
             {
-                DatabaseHelper.WriteFromList(
-                    albumCovers, 
-                    """
-                    INSERT INTO album_covers (image_data, mime_type, hash),
-                    VALUES (@image_data, @mime_type, @hash)
-                    """,
-                    DatabaseHelper.WriteAlbumCover,
-                    connection,
-                    transaction
-                );
+                foreach(AlbumCover albumCover in albumCovers)
+                {
+                    int albumCoverId = DatabaseHelper.WriteReturning<int>(
+                        """
+                        INSERT INTO album_covers (image_data, mime_type, hash)
+                        VALUES (@image_data, @mime_type, @hash)
+                        RETURNING album_cover_id
+                        """,
+                        command => DatabaseHelper.WriteAlbumCover(command, albumCover),
+                        connection,
+                        transaction
+                    );
+
+                    albumCover.InitilizeAlbumCoverId(albumCoverId);
+                }
             });
         }
+
+        public static void ExportAlbumCover(AlbumCover albumCover)
+        {
+            string extension = albumCover.MimeType switch
+            {
+                "image/jpeg" => ".jpg",
+                "image/png"  => ".png",
+                "image/gif"  => ".gif",
+                "image/webp" => ".webp",
+                _            => ".img"
+            };
+
+            string filePath = Path.Combine(Path.GetTempPath(), $"albumCover_{albumCover.AlbumCoverId}{extension}");
+            File.WriteAllBytes(filePath, albumCover.ImageData);
+            Process.Start(new ProcessStartInfo(filePath)
+            {
+                UseShellExecute = true
+            });
+
+            Console.WriteLine($"Saved {albumCover.ImageData.Length} bytes to {filePath}");
+        }
+
+        public static void ExportAlbumCover(int albumCoverId)
+        {
+            AlbumCover? albumCover = DatabaseHelper.GetAlbumCoverFromId(albumCoverId);
+            if(albumCover is null)
+                throw new InvalidDataException($"Could not find album cover with id {albumCoverId}");
+
+            ExportAlbumCover(albumCover);
+        }
+
+        #endregion
+
+        #region Playlists
 
         public static void AddPlaylist(Playlist playlist)
         {
@@ -472,15 +529,6 @@ namespace Database
             }
         }
 
-        public static List<string> GetFilePaths()
-        {
-            return DatabaseHelper.ReadToList(
-                """
-                SELECT file_path FROM tracks
-                """,
-                reader => 
-                    reader.GetString(reader.GetOrdinal("file_path"))
-            );
-        }
+        #endregion
     }    
 }
