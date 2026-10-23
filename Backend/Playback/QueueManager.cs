@@ -213,8 +213,22 @@ namespace Playback
             
                 foreach(int position in validatedPositions.Reverse())
                     Queue.RemoveAt(position);
-                
+
                 Queue.InsertRange(Math.Min(toIndex, Queue.Count), items);
+
+                // if(positions.Contains(currentIndex))
+                // {
+                //     currentIndex = toIndex + positions.IndexOf(currentIndex);
+                // }
+                // else if(toIndex > currentIndex)
+                // {
+                //     currentIndex -= positions.Count(pos => pos < currentIndex);
+                // }
+                // else if(toIndex < currentIndex)
+                // {
+                //     currentIndex += positions.Count(pos => pos > currentIndex);
+                // }   
+
                 Console.WriteLine($"Moved {validatedPositions.Length} tracks to {toIndex} in Queue");
             }
         }
