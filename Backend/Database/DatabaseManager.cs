@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using ATL;
 using MusicPlayerApp;
+using Track = MusicPlayerApp.Track;
 
 namespace Database
 {
@@ -71,23 +73,105 @@ namespace Database
                 DatabaseHelper.ReadTrack
             );
 
-            if (shouldRescan)
-            {
-                List<Track> tracksToUpdate = tracks.Where(track => track.ShouldUpdate == true).ToList();
-                if (tracksToUpdate.Count > 0)
-                    UpdateTracks(tracksToUpdate);
-                    Console.WriteLine($"Updated {tracksToUpdate.Count} tracks to the database");
-            }
+            // if (shouldRescan)
+            // {
+            //     List<Track> tracksToUpdate = tracks.Where(track => track.ShouldUpdate == true).ToList();
+            //     if (tracksToUpdate.Count > 0)
+            //         UpdateTracks(tracksToUpdate);
+            //         Console.WriteLine($"Updated {tracksToUpdate.Count} tracks to the database");
+            // }
             
             return tracks;
         }
 
+        public static void RescanTracks()
+        {
+            List<Track> tracks = DatabaseHelper.ReadToList(
+                """
+                SELECT * FROM tracks
+                ORDER BY track_id ASC
+                """,
+                DatabaseHelper.ReadTrack
+            );
+
+            List<Track> tracksWithoutValidPath = new List<Track>();
+            List<Track> tracksOutOfSync = new List<Track>(tracks.Count);
+            foreach(Track track in tracks)
+            {
+                // Check if file path still exists
+                bool filePathExists = File.Exists(track.FilePath);
+                if(!filePathExists)
+                {
+                    // Process track that no longer has a valid file path
+                    tracksWithoutValidPath.Add(track);
+                    continue;
+                }
+                
+                // Check if track is out of sync (this also covers newly added tracks)
+                bool isSynced = track.IsSynced();
+                if (!isSynced)
+                {
+                    tracksOutOfSync.Add(track);
+                }
+            }
+
+            // TODO: Process tracks without valid file path
+
+            // Update out of sync tracks
+            UpdateTracks(tracksOutOfSync);
+
+            Library.LoadLibraryFromDatabase();
+        }
+
         public static void UpdateTracks(List<Track> tracks)
         {
-            HashSet<int> albumIds = tracks.Select(track => track.AlbumId).ToHashSet();
+            List<Track> newTracks = new List<Track>(tracks.Count);
+            List<AlbumCover> newAlbumCovers = new List<AlbumCover>(tracks.Count);
+            foreach(Track track in tracks)
+            {
+                ATL.Track metadata = new ATL.Track(track.FilePath);
+
+                Track newTrack = new Track(track.FilePath);
+                newTrack.TrackId = track.TrackId;
+
+                metadata.EmbeddedPictures
+                    .Where(pictureInfo => pictureInfo.PicType == PictureInfo.PIC_TYPE.Front)
+                    .ToList()
+                    .TryGet(0, out PictureInfo? pictureInfo);
+
+                if(pictureInfo is null)
+                {
+                    // This track does not have a album cover, ignore.
+                    newTracks.Add(newTrack);
+                    continue;
+                }
+
+                AlbumCover? currentAlbumCover = track.Metadata.AlbumCover;
+                AlbumCover? newAlbumCover;
+                string? currentHash = track.Metadata.AlbumCover?.Hash;
+                string newHash = AlbumCover.GetHashFromImageData(pictureInfo.PictureData);
+                if(currentAlbumCover is null || currentHash != newHash)
+                {
+                    newAlbumCover = new AlbumCover(pictureInfo);
+                    newTrack.InitilizeAlbumCover(newAlbumCover);
+                    newAlbumCovers.Add(newAlbumCover);
+                }
+                else
+                {
+                    newAlbumCover = track.Metadata.AlbumCover;
+                    if(newAlbumCover is not null)
+                        newTrack.InitilizeAlbumCover(newAlbumCover);
+                };
+                
+                newTracks.Add(newTrack);
+            }
+            
+            AddAlbumCovers(newAlbumCovers);
+
+            HashSet<int> albumIds = newTracks.Select(track => track.AlbumId).ToHashSet();
 
             List<FailedItem<Track>> failedTracks = DatabaseHelper.WriteFromList(
-                tracks,
+                newTracks,
                 """
                 UPDATE tracks
                 SET title = @title,
@@ -115,6 +199,7 @@ namespace Database
                         newAlbumId = AddAlbum(new Album(track.Metadata.Album, track.Metadata.AlbumArtist));
                     }
 
+                    Console.WriteLine(Library.SerializeAlbumKey(track.Metadata.Album, track.Metadata.AlbumArtist));
                     Console.WriteLine($"New Album Id: {newAlbumId}");
 
                     command.Parameters.AddWithValue("title", metadata.Title);
@@ -122,6 +207,7 @@ namespace Database
                     command.Parameters.AddWithValue("album", metadata.Album);
                     command.Parameters.AddWithValue("album_artist", metadata.AlbumArtist);
                     command.Parameters.AddWithValue("track_number", metadata.TrackNumber);
+                    command.Parameters.AddWithValue("album_cover_id", metadata.AlbumCover?.AlbumCoverId ?? 0);
                     command.Parameters.AddWithValue("disc_number", metadata.DiscNumber);
                     command.Parameters.AddWithValue("duration_seconds", metadata.DurationSeconds);
                     command.Parameters.AddWithValue("date", metadata.Date.ToString());
@@ -144,6 +230,7 @@ namespace Database
                 }
                 Console.Write("\n");
             }
+            Console.WriteLine($"Updated {tracks.Count - failedTracks.Count} tracks to the database");
 
             if (albumIds.Count > 0)
             {

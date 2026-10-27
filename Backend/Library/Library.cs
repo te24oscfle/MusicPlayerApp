@@ -151,7 +151,8 @@ namespace MusicPlayerApp
                         try
                         {
                             track.InitilizeAlbumCover(albumCover);
-                        } catch (Exception e)
+                        } 
+                        catch (Exception e)
                         {
                             Console.WriteLine(e);
                         }

@@ -1,3 +1,6 @@
+using System.Globalization;
+using Database;
+
 namespace MusicPlayerApp
 {
     public class TrackMetadata
@@ -80,6 +83,36 @@ namespace MusicPlayerApp
                 throw new InvalidOperationException("The AlbumCover is already initilized.");
             
             Metadata.AlbumCover = albumCover;
+        }
+
+        public bool IsSynced()
+        {
+            string? dbLastModifiedUtcString = DatabaseHelper.Read(
+                """
+                SELECT last_modified_utc FROM tracks
+                WHERE track_id = @track_id
+                """,
+                reader => reader.GetString(reader.GetOrdinal("last_modified_utc")),
+                command => command.Parameters.AddWithValue("track_id", TrackId)
+            );
+
+            if(dbLastModifiedUtcString is null)
+                return false;
+
+            DateTime dbLastModifiedUtc = DateTime.Parse(
+                dbLastModifiedUtcString,
+                null,
+                DateTimeStyles.RoundtripKind
+            );
+            DateTime fileLastModifiedUtc = File.GetLastWriteTimeUtc(FilePath);
+
+            Console.WriteLine($"FILE_PATH: {FilePath}");
+            Console.WriteLine($"\tDB_LAST_MODIFIED: {dbLastModifiedUtc}");
+            Console.WriteLine($"\tFILE_LAST_MODIFIED: {fileLastModifiedUtc}");
+            Console.WriteLine($"IS_SYNCED: {dbLastModifiedUtc == fileLastModifiedUtc}");
+            Console.Write("\n");
+
+            return dbLastModifiedUtc == fileLastModifiedUtc;
         }
         
         public override bool Equals(object? obj)

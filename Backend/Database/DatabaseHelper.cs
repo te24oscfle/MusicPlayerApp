@@ -483,44 +483,83 @@ namespace Database
 
         #region Class-specific read/write functions
 
+        // public static Track ReadTrack(SqliteDataReader reader)
+        // {
+        //     string filePath = reader.GetString(reader.GetOrdinal("file_path"));            
+        //     DateTime dbLastModifiedUtc = DateTime.Parse(
+        //         reader.GetString(reader.GetOrdinal("last_modified_utc")),
+        //         null,
+        //         DateTimeStyles.RoundtripKind
+        //     );
+        //     DateTime fileLastModifiedUtc = File.GetLastWriteTimeUtc(filePath);
+
+        //     TrackMetadata trackMetadata;
+            
+        //     // Should the metadata of the track be updated in the database. False by default, if the file has been modified since it last was last written to database, this will be set to true.
+        //     bool shouldUpdate = false;
+
+        //     if (dbLastModifiedUtc != fileLastModifiedUtc)
+        //     {
+        //         // Get updated metadata and set flag to update track in database
+        //         trackMetadata = new TrackMetadata(new ATL.Track(filePath));
+        //         shouldUpdate = true;
+        //     }
+        //     else
+        //     {
+        //         // Metadata is already up to date
+        //         trackMetadata = new TrackMetadata(
+        //             reader.GetString(reader.GetOrdinal("title")),
+        //             reader.GetString(reader.GetOrdinal("artist")),
+        //             reader.GetString(reader.GetOrdinal("album")),
+        //             reader.GetString(reader.GetOrdinal("album_artist")),
+        //             reader.GetInt32(reader.GetOrdinal("track_number")),
+        //             reader.GetInt32(reader.GetOrdinal("disc_number")),
+        //             reader.GetInt16(reader.GetOrdinal("duration_seconds")),
+        //             DateTime.Parse(reader.GetString(reader.GetOrdinal("date"))),
+        //             reader.GetString(reader.GetOrdinal("genre")),
+        //             fileLastModifiedUtc
+        //         );
+        //     }
+
+        //     Track track = new Track(
+        //         reader.GetInt32(reader.GetOrdinal("track_id")),
+        //         reader.GetString(reader.GetOrdinal("file_path")),
+        //         reader.GetInt32(reader.GetOrdinal("album_id")),
+        //         trackMetadata
+        //     );
+
+        //     if (shouldUpdate)
+        //         track.ShouldUpdate = true;
+        //     else
+        //     {
+        //         AlbumCover? albumCover = GetAlbumCoverFromId(reader.GetInt32(reader.GetOrdinal("album_cover_id")));
+        //         if(albumCover is not null)
+        //             track.InitilizeAlbumCover(albumCover); 
+        //     }
+            
+        //     return track;
+        // }
+
         public static Track ReadTrack(SqliteDataReader reader)
         {
-            string filePath = reader.GetString(reader.GetOrdinal("file_path"));            
-            DateTime dbLastModifiedUtc = DateTime.Parse(
-                reader.GetString(reader.GetOrdinal("last_modified_utc")),
-                null,
-                DateTimeStyles.RoundtripKind
-            );
+            string filePath = reader.GetString(reader.GetOrdinal("file_path"));
             DateTime fileLastModifiedUtc = File.GetLastWriteTimeUtc(filePath);
-
-            TrackMetadata trackMetadata;
             
-            // Should the metadata of the track be updated in the database. False by default, if the file has been modified since it last was last written to database, this will be set to true.
-            bool shouldUpdate = false;
+            // Create Track Metadata
+            TrackMetadata trackMetadata = new TrackMetadata(
+                reader.GetString(reader.GetOrdinal("title")),
+                reader.GetString(reader.GetOrdinal("artist")),
+                reader.GetString(reader.GetOrdinal("album")),
+                reader.GetString(reader.GetOrdinal("album_artist")),
+                reader.GetInt32(reader.GetOrdinal("track_number")),
+                reader.GetInt32(reader.GetOrdinal("disc_number")),
+                reader.GetInt16(reader.GetOrdinal("duration_seconds")),
+                DateTime.Parse(reader.GetString(reader.GetOrdinal("date"))),
+                reader.GetString(reader.GetOrdinal("genre")),
+                fileLastModifiedUtc
+            );
 
-            if (dbLastModifiedUtc != fileLastModifiedUtc)
-            {
-                // Get updated metadata and set flag to update track in database
-                trackMetadata = new TrackMetadata(new ATL.Track(filePath));
-                shouldUpdate = true;
-            }
-            else
-            {
-                // Metadata is already up to date
-                trackMetadata = new TrackMetadata(
-                    reader.GetString(reader.GetOrdinal("title")),
-                    reader.GetString(reader.GetOrdinal("artist")),
-                    reader.GetString(reader.GetOrdinal("album")),
-                    reader.GetString(reader.GetOrdinal("album_artist")),
-                    reader.GetInt32(reader.GetOrdinal("track_number")),
-                    reader.GetInt32(reader.GetOrdinal("disc_number")),
-                    reader.GetInt16(reader.GetOrdinal("duration_seconds")),
-                    DateTime.Parse(reader.GetString(reader.GetOrdinal("date"))),
-                    reader.GetString(reader.GetOrdinal("genre")),
-                    fileLastModifiedUtc
-                );
-            }
-
+            // Create Track
             Track track = new Track(
                 reader.GetInt32(reader.GetOrdinal("track_id")),
                 reader.GetString(reader.GetOrdinal("file_path")),
@@ -528,14 +567,10 @@ namespace Database
                 trackMetadata
             );
 
-            if (shouldUpdate)
-                track.ShouldUpdate = true;
-            else
-            {
-                AlbumCover? albumCover = GetAlbumCoverFromId(reader.GetInt32(reader.GetOrdinal("album_cover_id")));
-                if(albumCover is not null)
-                    track.InitilizeAlbumCover(albumCover); 
-            }
+            // Initilize AlbumCover
+            AlbumCover? albumCover = GetAlbumCoverFromId(reader.GetInt32(reader.GetOrdinal("album_cover_id")));
+            if(albumCover is not null)
+                track.InitilizeAlbumCover(albumCover);
             
             return track;
         }

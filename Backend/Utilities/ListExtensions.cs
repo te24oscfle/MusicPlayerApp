@@ -17,5 +17,10 @@ namespace MusicPlayerApp
                 (list[i], list[j]) = (list[j], list[i]);
             }
         }
+
+        public static void TryGet<T>(this IList<T> list, int index, out T? value)
+        {
+            value = index < list.Count && index > 0 ? list[index] : default;
+        }
     }
 }
