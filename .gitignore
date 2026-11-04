@@ -58,3 +58,10 @@ nunit-*.xml
 
 # Database
 library_database.db
+
+# Frontend dependencies
+Frontend/node_modules/
+
+# Frontend build output
+Frontend/dist/
+Frontend/out/
