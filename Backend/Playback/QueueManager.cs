@@ -25,6 +25,22 @@ namespace Playback
         Disabled,
         Enabled
     };
+
+    public class CollectionReference
+    {
+        public Album? Album { get; }
+        public Playlist? Playlist { get; }
+
+        public CollectionReference(Playlist playlist)
+        {
+            Playlist = playlist;
+        }
+
+        public CollectionReference(Album album)
+        {
+            Album = album;   
+        }
+    }
     
     public static class QueueManager
     {
@@ -41,6 +57,7 @@ namespace Playback
         public static int CurrentIndex => currentIndex;
         public static LoopState LoopState => _loopState;
         public static ShuffleState ShuffleState => _shuffleState;
+        public static CollectionReference? CurrentCollectionRef;
         
         private static void EnableShuffle()
         {
@@ -200,10 +217,7 @@ namespace Playback
                     return;
                 }
 
-                Console.WriteLine($"CurrentIndex: {currentIndex}");
-                Console.WriteLine($"Queue length: {Queue.Count}");
                 Queue.TryGetValue(currentIndex, out QueueItem? currentItem);
-                Console.WriteLine($"CurrentItem exists: {currentItem is not null}");
 
                 List<QueueItem> items = validatedPositions
                     .Select(position => Queue[position])
@@ -267,6 +281,20 @@ namespace Playback
                 {
                     // We reached the end of the queue.
                     currentIndex = 0;
+
+                    if(CurrentCollectionRef is not null)
+                    {
+                        ClearQueue(true);
+                        if(CurrentCollectionRef.Album is not null)
+                        {
+                            AddTracksToQueue(CurrentCollectionRef.Album.GetTracks(), true, false);
+                        }
+                        else if(CurrentCollectionRef.Playlist is not null)
+                        {
+                            AddTracksToQueue(CurrentCollectionRef.Playlist.Tracks, true, false);
+                        }
+                    }
+                    
                 }
 
                 // currentIndex is now pointing at the next track
@@ -298,6 +326,19 @@ namespace Playback
                 {
                     // We reached the end of the queue.
                     currentIndex = _loopState == LoopState.LoopQueue ? Queue.Count - 1 : 0;
+
+                    if(CurrentCollectionRef is not null)
+                    {
+                        ClearQueue(true);
+                        if(CurrentCollectionRef.Album is not null)
+                        {
+                            AddTracksToQueue(CurrentCollectionRef.Album.GetTracks(), true, false);
+                        }
+                        else if(CurrentCollectionRef.Playlist is not null)
+                        {
+                            AddTracksToQueue(CurrentCollectionRef.Playlist.Tracks, true, false);
+                        }
+                    }
                 }
 
                 QueueItem? previousItem = Queue.ElementAtOrDefault(currentIndex);
@@ -315,6 +356,9 @@ namespace Playback
 
         public static void PlayAlbum(Album album)
         {
+            CollectionReference collectionRef = new CollectionReference(album);
+            CurrentCollectionRef = collectionRef;
+            
             List<Track> tracks = album.GetTracks();
             
             ClearQueue(true);
@@ -326,6 +370,9 @@ namespace Playback
 
         public static void PlayPlaylist(Playlist playlist)
         {
+            CollectionReference collectionRef = new CollectionReference(playlist);
+            CurrentCollectionRef = collectionRef;
+            
             List<Track> tracks = playlist.Tracks;
             
             ClearQueue(true);
