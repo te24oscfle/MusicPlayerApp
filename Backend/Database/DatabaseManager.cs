@@ -137,7 +137,7 @@ namespace Database
                 metadata.EmbeddedPictures
                     .Where(pictureInfo => pictureInfo.PicType == PictureInfo.PIC_TYPE.Front)
                     .ToList()
-                    .TryGet(0, out PictureInfo? pictureInfo);
+                    .TryGetValue(0, out PictureInfo? pictureInfo);
 
                 if(pictureInfo is null)
                 {

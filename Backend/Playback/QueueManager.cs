@@ -188,16 +188,9 @@ namespace Playback
                 if (toIndex < 0 || toIndex >= Queue.Count)
                     throw new ArgumentOutOfRangeException(nameof(toIndex));
                 
-                if (toIndex <= currentIndex)
-                {
-                    Console.WriteLine("Cannot move tracks behind current track");
-                    return;
-                }
-                
                 int[] validatedPositions = positions
                     .Distinct()
                     .Where(position => position >= 0 && position < Queue.Count)
-                    .Where(position => position > currentIndex)
                     .OrderBy(position => position)
                     .ToArray();
 
@@ -206,6 +199,11 @@ namespace Playback
                     Console.WriteLine("No valid positions to move");
                     return;
                 }
+
+                Console.WriteLine($"CurrentIndex: {currentIndex}");
+                Console.WriteLine($"Queue length: {Queue.Count}");
+                Queue.TryGetValue(currentIndex, out QueueItem? currentItem);
+                Console.WriteLine($"CurrentItem exists: {currentItem is not null}");
 
                 List<QueueItem> items = validatedPositions
                     .Select(position => Queue[position])
@@ -216,19 +214,16 @@ namespace Playback
 
                 Queue.InsertRange(Math.Min(toIndex, Queue.Count), items);
 
-                // if(positions.Contains(currentIndex))
-                // {
-                //     currentIndex = toIndex + positions.IndexOf(currentIndex);
-                // }
-                // else if(toIndex > currentIndex)
-                // {
-                //     currentIndex -= positions.Count(pos => pos < currentIndex);
-                // }
-                // else if(toIndex < currentIndex)
-                // {
-                //     currentIndex += positions.Count(pos => pos > currentIndex);
-                // }   
-
+                if(currentItem is not null)
+                {
+                    // Normal equals check will return true if the record value matches, not if the records are the same objects in memory.
+                    int newCurrentIndex = Queue.FindIndex(queueItem => ReferenceEquals(queueItem, currentItem));
+                    if(newCurrentIndex == -1)
+                        throw new InvalidOperationException("Could not locate current track after moving tracks");
+                    
+                    currentIndex = newCurrentIndex;
+                    
+                }
                 Console.WriteLine($"Moved {validatedPositions.Length} tracks to {toIndex} in Queue");
             }
         }

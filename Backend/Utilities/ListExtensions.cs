@@ -18,9 +18,11 @@ namespace MusicPlayerApp
             }
         }
 
-        public static void TryGet<T>(this IList<T> list, int index, out T? value)
+        public static void TryGetValue<T>(this IList<T> list, int index, out T? value)
         {
-            value = index < list.Count && index > 0 ? list[index] : default;
+            ArgumentNullException.ThrowIfNull(list);
+
+            value = index < list.Count && index >= 0 ? list[index] : default;
         }
     }
 }
