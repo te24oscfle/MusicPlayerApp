@@ -94,7 +94,7 @@ function createWindow() {
         y: bounds?.y,
 
         // Screen configuration
-        frame: !DEV_MODE,
+        frame: DEV_MODE,
         resizable: true,
         maximizable: true,
         minimizable: true,

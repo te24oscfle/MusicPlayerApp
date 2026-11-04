@@ -4,8 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MusicPlayerApp</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>MusicPlayerApp</h1>
+    <div class="app">
+        <section class="titlebarFrame"></section>
+        <div class="workspace">
+            <section class="playlistFrame"></section>
+
+            <section class="main-content-frame">
+
+                <div class="content-frame library-page shown">
+                    <div class="header">
+                        <h2 class="library-title">My Library</h2>
+                        <div class="library-actions">
+                            <button class="context-sort-button">Sort</button>
+                            <button class="action-button">Import</button>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="album-container">
+                        <div class="album-card">
+
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <section class="queueFrame"></section>
+        </div>
+        <section class="nowPlayingFrame"></section>
+    </div>
 </body>
 </html>
