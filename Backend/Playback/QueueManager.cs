@@ -1,5 +1,5 @@
-using CommandSystem;
-using MusicPlayerApp;
+using MusicLibrary;
+using Extensions;
 
 namespace Playback
 {

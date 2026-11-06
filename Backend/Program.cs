@@ -9,6 +9,7 @@
 using CommandSystem;
 using Database;
 using Playback;
+using MusicLibrary;
 
 namespace MusicPlayerApp;
 

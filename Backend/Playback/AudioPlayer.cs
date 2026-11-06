@@ -1,5 +1,6 @@
-using MusicPlayerApp;
 using LibVLCSharp.Shared;
+
+using MusicLibrary;
 
 namespace Playback
 {

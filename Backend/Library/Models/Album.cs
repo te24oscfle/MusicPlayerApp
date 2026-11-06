@@ -1,37 +1,63 @@
-namespace MusicPlayerApp
+namespace MusicLibrary;
+
+public class Album
 {
-    public class Album
+    public int AlbumId;
+    public string Title;
+    public string Artist;
+    public AlbumCover? AlbumCover { get; private set; }
+    public Dictionary<int, List<Track>> Discs;
+
+    public Album(int albumId, string title, string artist, AlbumCover? albumCover, Dictionary<int, List<Track>> discs)
     {
-        public int AlbumId;
-        public string Title;
-        public string Artist;
-        public AlbumCover? AlbumCover { get; private set; }
-        public Dictionary<int, List<Track>> Discs;
+        AlbumId = albumId;
+        Title = title;
+        Artist = artist;
+        AlbumCover = albumCover;
+        Discs = discs;
+    }
+    
+    public Album(int albumId, string title, string artist)
+        : this(albumId, title, artist, null, new Dictionary<int, List<Track>>()) {}
 
-        public Album(int albumId, string title, string artist, AlbumCover? albumCover, Dictionary<int, List<Track>> discs)
-        {
-            AlbumId = albumId;
-            Title = title;
-            Artist = artist;
-            AlbumCover = albumCover;
-            Discs = discs;
-        }
+    public Album(string title, string artist)
+        : this(0, title, artist, null, new Dictionary<int, List<Track>>()) {}
+
+    public void InitilizeAlbumCover(AlbumCover albumCover)
+    {
+        if(AlbumCover is not null)
+            throw new InvalidOperationException("The AlbumCover is already initilized.");
         
-        public Album(int albumId, string title, string artist)
-            : this(albumId, title, artist, null, new Dictionary<int, List<Track>>()) {}
-
-        public Album(string title, string artist)
-            : this(0, title, artist, null, new Dictionary<int, List<Track>>()) {}
-
-        public void InitilizeAlbumCover(AlbumCover albumCover)
+        AlbumCover = albumCover;
+    }
+    
+    public void AddTrack(Track track)
+    {
+        // Check if disc exists
+        if(!Discs.ContainsKey(track.Metadata.DiscNumber))
         {
-            if(AlbumCover is not null)
-                throw new InvalidOperationException("The AlbumCover is already initilized.");
-            
-            AlbumCover = albumCover;
+            // It doesn't, create it
+            Discs.Add(track.Metadata.DiscNumber, new List<Track>());
         }
+
+        // Prevent duplicate tracks
+        List<Track> disc = Discs[track.Metadata.DiscNumber];
+        if (disc.Contains(track))
+            return;
         
-        public void AddTrack(Track track)
+        // Add track to disc
+        disc.Add(track);
+
+        // Sort the disc
+        disc.Sort((a, b) =>
+            a.Metadata.TrackNumber.CompareTo(b.Metadata.TrackNumber)
+        );
+    }
+
+    public void AddTracks(List<Track> tracks)
+    {
+        // Add tracks
+        foreach(Track track in tracks)
         {
             // Check if disc exists
             if(!Discs.ContainsKey(track.Metadata.DiscNumber))
@@ -43,53 +69,26 @@ namespace MusicPlayerApp
             // Prevent duplicate tracks
             List<Track> disc = Discs[track.Metadata.DiscNumber];
             if (disc.Contains(track))
-                return;
+                continue;
             
             // Add track to disc
             disc.Add(track);
+        }
 
-            // Sort the disc
-            disc.Sort((a, b) =>
+        // Sort each disc
+        foreach (var pair in Discs)
+        {
+            pair.Value.Sort((a, b) =>
                 a.Metadata.TrackNumber.CompareTo(b.Metadata.TrackNumber)
             );
         }
+    }
 
-        public void AddTracks(List<Track> tracks)
-        {
-            // Add tracks
-            foreach(Track track in tracks)
-            {
-                // Check if disc exists
-                if(!Discs.ContainsKey(track.Metadata.DiscNumber))
-                {
-                    // It doesn't, create it
-                    Discs.Add(track.Metadata.DiscNumber, new List<Track>());
-                }
-
-                // Prevent duplicate tracks
-                List<Track> disc = Discs[track.Metadata.DiscNumber];
-                if (disc.Contains(track))
-                    continue;
-                
-                // Add track to disc
-                disc.Add(track);
-            }
-
-            // Sort each disc
-            foreach (var pair in Discs)
-            {
-                pair.Value.Sort((a, b) =>
-                    a.Metadata.TrackNumber.CompareTo(b.Metadata.TrackNumber)
-                );
-            }
-        }
-
-        public List<Track> GetTracks()
-        {
-            return Discs
-                .OrderBy(pair => pair.Key)
-                .SelectMany(pair => pair.Value)
-                .ToList();
-        }
+    public List<Track> GetTracks()
+    {
+        return Discs
+            .OrderBy(pair => pair.Key)
+            .SelectMany(pair => pair.Value)
+            .ToList();
     }
 }

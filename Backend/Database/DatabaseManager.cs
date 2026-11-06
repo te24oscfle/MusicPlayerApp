@@ -1,7 +1,10 @@
 using System.Diagnostics;
 using ATL;
-using MusicPlayerApp;
-using Track = MusicPlayerApp.Track;
+
+using MusicLibrary;
+using Extensions;
+
+using Track = MusicLibrary.Track;
 
 namespace Database
 {

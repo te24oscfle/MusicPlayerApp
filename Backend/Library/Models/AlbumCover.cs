@@ -1,43 +1,42 @@
 using System.Security.Cryptography;
 using ATL;
 
-namespace MusicPlayerApp
+namespace MusicLibrary;
+
+public class AlbumCover
 {
-    public class AlbumCover
+    public int? AlbumCoverId { get; private set; }
+    public byte[] ImageData { get; private set; }
+    public string MimeType { get; private set; }
+    public string Hash { get; private set; }
+
+    public AlbumCover(int albumCoverId, byte[] imageData, string mimeType, string hash)
     {
-        public int? AlbumCoverId { get; private set; }
-        public byte[] ImageData { get; private set; }
-        public string MimeType { get; private set; }
-        public string Hash { get; private set; }
+        AlbumCoverId = albumCoverId;
+        ImageData = imageData;
+        MimeType = mimeType;
+        Hash = hash;
+    }
 
-        public AlbumCover(int albumCoverId, byte[] imageData, string mimeType, string hash)
-        {
-            AlbumCoverId = albumCoverId;
-            ImageData = imageData;
-            MimeType = mimeType;
-            Hash = hash;
-        }
+    public AlbumCover(PictureInfo pictureInfo)
+    {
+        ImageData = pictureInfo.PictureData;
+        MimeType = pictureInfo.MimeType;
+        Hash = GetHashFromImageData(pictureInfo.PictureData);
+    }
 
-        public AlbumCover(PictureInfo pictureInfo)
-        {
-            ImageData = pictureInfo.PictureData;
-            MimeType = pictureInfo.MimeType;
-            Hash = GetHashFromImageData(pictureInfo.PictureData);
-        }
-
-        public static string GetHashFromImageData(byte[] imageData)
-        {
-            return Convert.ToHexString(SHA256.HashData(imageData));
-        }
-        public void InitilizeAlbumCoverId(int albumCoverId)
-        {   
-            if(AlbumCoverId.HasValue)
-                throw new InvalidOperationException("The AlbumCoverId has already been initilized");
-            
-            if (albumCoverId <= 0)
-                throw new ArgumentOutOfRangeException($"AlbumCoverId must be greater than 0: {nameof(albumCoverId)}");
-            
-            AlbumCoverId = albumCoverId;
-        }
+    public static string GetHashFromImageData(byte[] imageData)
+    {
+        return Convert.ToHexString(SHA256.HashData(imageData));
+    }
+    public void InitilizeAlbumCoverId(int albumCoverId)
+    {   
+        if(AlbumCoverId.HasValue)
+            throw new InvalidOperationException("The AlbumCoverId has already been initilized");
+        
+        if (albumCoverId <= 0)
+            throw new ArgumentOutOfRangeException($"AlbumCoverId must be greater than 0: {nameof(albumCoverId)}");
+        
+        AlbumCoverId = albumCoverId;
     }
 }

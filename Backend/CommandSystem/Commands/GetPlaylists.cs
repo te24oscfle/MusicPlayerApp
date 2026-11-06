@@ -1,4 +1,4 @@
-using MusicPlayerApp;
+using MusicLibrary;
 using Database;
 
 namespace CommandSystem
