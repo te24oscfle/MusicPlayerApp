@@ -5,6 +5,7 @@ using MusicLibrary;
 using Extensions;
 
 using Track = MusicLibrary.Track;
+using System.Runtime.CompilerServices;
 
 namespace Database
 {
@@ -454,7 +455,7 @@ namespace Database
 
         #region Playlists
 
-        public static void AddPlaylist(Playlist playlist)
+        public static bool AddPlaylist(Playlist playlist)
         {
             lock(playlistLock)
             {
@@ -469,6 +470,8 @@ namespace Database
 
                 if (id is not null)
                     playlist.InitilizePlaylistId(id.Value);
+                
+                return id is not null;
             }
         }
 
@@ -553,11 +556,11 @@ namespace Database
             }   
         }
 
-        public static void UpdatePlaylistMetadata(Playlist playlist)
+        public static bool UpdatePlaylistMetadata(Playlist playlist)
         {
             lock(playlistLock)
             {
-               DatabaseHelper.Write(
+                return DatabaseHelper.Write(
                     """
                     UPDATE playlist_metadata
                     SET title = @title,

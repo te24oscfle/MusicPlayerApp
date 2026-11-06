@@ -50,14 +50,14 @@ namespace MusicLibrary;
         PlaylistId = id;
     }
     
-    public void UpdateMetadata(string? title, string? description, string? imageFilePath)
+    public bool UpdateMetadata(string? title, string? description, string? imageFilePath)
     {
         // Use the new value if it exists, else keep using value already assigned
         Title = title ?? Title;
         Description = description ?? Description;
         ImageFilePath = ImageFilePath ?? ImageFilePath;
 
-        DatabaseManager.UpdatePlaylistMetadata(this);
+        return DatabaseManager.UpdatePlaylistMetadata(this);
     }
     
     public void AddTracks(List<Track> tracks, bool silencePrints=false)
