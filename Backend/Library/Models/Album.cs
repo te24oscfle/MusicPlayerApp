@@ -2,11 +2,11 @@ namespace MusicLibrary;
 
 public class Album
 {
-    public int AlbumId;
-    public string Title;
-    public string Artist;
+    public int AlbumId { get; set; }
+    public string Title { get; }
+    public string Artist { get; }
     public AlbumCover? AlbumCover { get; private set; }
-    public Dictionary<int, List<Track>> Discs;
+    public Dictionary<int, List<Track>> Discs { get; private set; }
 
     public Album(int albumId, string title, string artist, AlbumCover? albumCover, Dictionary<int, List<Track>> discs)
     {

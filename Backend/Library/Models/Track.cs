@@ -58,11 +58,11 @@ public class TrackMetadata
 
 public class Track
 {
-    public int TrackId;
-    public string FilePath;
-    public int AlbumId;
-    public TrackMetadata Metadata;
-    public bool ShouldUpdate = false;
+    public int TrackId { get; set; }
+    public string FilePath { get; }
+    public int AlbumId { get; set; }
+    public TrackMetadata Metadata { get; }
+    public bool ShouldUpdate { get; set; } = false;
 
     public Track(int trackId, string filePath, int albumId, TrackMetadata metadata)
     {

@@ -1,6 +1,8 @@
-async function getAlbums() {
-    return await window.api.getAlbums()
+async function main() {
+    const albums = await window.api.getAlbums()
+    albums.forEach(album => {
+        console.log(album.albumCover)
+    });
 }
 
-const albums = getAlbums()
-console.log(albums)
+main()
