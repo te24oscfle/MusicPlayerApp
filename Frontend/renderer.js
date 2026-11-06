@@ -1,8 +1,6 @@
-async function main() {
-    const albums = await window.api.getAlbums()
-    albums.forEach(album => {
-        print(album)
-    });
+async function getAlbums() {
+    return await window.api.getAlbums()
 }
 
-main()
+const albums = getAlbums()
+console.log(albums)

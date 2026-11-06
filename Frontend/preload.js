@@ -1,6 +1,6 @@
-const { contextBridge, ipcRenderer} = require("electron");
+const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.executeInMainWorld("api" , {
+contextBridge.exposeInMainWorld('api', {
 
     getAlbums: () => ipcRenderer.invoke("get-albums")
 

@@ -10,7 +10,7 @@ const fs = require("node:fs")
 // #region Constants
 // ================================
 
-const DEV_MODE = true
+const DEVELOPER_MODE = true
 const DEFAULT_BOUNDS = {
     width: 1440,
     height: 810
@@ -23,7 +23,7 @@ const DISPLAY_OVERLAP_THRESHOLD = 250
 
 const SETTINGS_PATH = path.join(app.getPath("userData"), "window-settings.json")
 
-const API_URL = ""
+const API_URL = "http://127.0.0.1:5017"
 
 // ================================
 // #region Functions
@@ -96,7 +96,7 @@ function createWindow() {
         y: bounds?.y,
 
         // Screen configuration
-        frame: DEV_MODE,
+        frame: DEVELOPER_MODE,
         resizable: true,
         maximizable: true,
         minimizable: true,
@@ -110,12 +110,14 @@ function createWindow() {
             sandbox: true,
             
             // Configuration
-            devTools: DEV_MODE,
+            devTools: DEVELOPER_MODE,
         }
     })
 
     // Remove the (File, Edit, View, ...) menu at the top
     window.removeMenu()
+
+    window.webContents.openDevTools()
 
     // Maximize screen
     if(settings.isMaximized)
@@ -128,18 +130,19 @@ function createWindow() {
 
     // Load html file
     window.loadFile("index.html")
-
-    return window;
 }
 
 async function handleGetAlbums() {
-    const response = await fetch(`${API_URL}/api/library/library/albums`)
+    const response = await fetch(`${API_URL}/api/library/albums`)
     return await response.json()
 }
 
 // ================================
 // #region Runtime
 // ================================
+
+// API Callback
+ipcMain.handle("get-albums", handleGetAlbums)
 
 // Application Window
 app.whenReady().then(() => {
@@ -155,6 +158,3 @@ app.on("window-all-closed", () => {
     if(process.platform !== "darwin")
         app.quit()
 })
-
-// API Callback
-ipcMain.handle("get-album", handleGetAlbums)
