@@ -1,7 +1,7 @@
 {
   "name": "frontend",
   "version": "1.0.0",
-  "private":true,
+  "private": true,
   "description": "",
   "main": "main.js",
   "scripts": {
@@ -13,6 +13,6 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "electron": "^45.2.2"
+    "electron": "^45.2.3"
   }
 }

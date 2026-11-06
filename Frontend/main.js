@@ -2,7 +2,7 @@
 // #region Modules
 // ================================
 
-const { app, BrowserWindow, screen } = require("electron") 
+const { app, BrowserWindow, screen, ipcMain } = require("electron") 
 const path = require("node:path")
 const fs = require("node:fs")
 
@@ -22,6 +22,8 @@ const MINIMUM_BOUNDS = {
 const DISPLAY_OVERLAP_THRESHOLD = 250
 
 const SETTINGS_PATH = path.join(app.getPath("userData"), "window-settings.json")
+
+const API_URL = ""
 
 // ================================
 // #region Functions
@@ -102,6 +104,7 @@ function createWindow() {
         // Web preferences
         webPreferences: {
             // Security
+            preload: path.join(__dirname, "preload.js"),
             contextIsolation: true,
             nodeIntegration: false,
             sandbox: true,
@@ -125,12 +128,20 @@ function createWindow() {
 
     // Load html file
     window.loadFile("index.html")
+
+    return window;
+}
+
+async function handleGetAlbums() {
+    const response = await fetch(`${API_URL}/api/library/library/albums`)
+    return await response.json()
 }
 
 // ================================
 // #region Runtime
 // ================================
 
+// Application Window
 app.whenReady().then(() => {
     createWindow()
 
@@ -144,3 +155,6 @@ app.on("window-all-closed", () => {
     if(process.platform !== "darwin")
         app.quit()
 })
+
+// API Callback
+ipcMain.handle("get-album", handleGetAlbums)

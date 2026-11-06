@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\te24o\\Documents\\Projects\\MusicPlayerApp\\MusicPlayerApp\\backend\\Backend.csproj": {}
+    "C:\\Users\\te24o\\Documents\\Projects\\MusicPlayerApp\\MusicPlayerApp\\Backend\\Backend.csproj": {}
   },
   "projects": {
-    "C:\\Users\\te24o\\Documents\\Projects\\MusicPlayerApp\\MusicPlayerApp\\backend\\Backend.csproj": {
+    "C:\\Users\\te24o\\Documents\\Projects\\MusicPlayerApp\\MusicPlayerApp\\Backend\\Backend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\te24o\\Documents\\Projects\\MusicPlayerApp\\MusicPlayerApp\\backend\\Backend.csproj",
+        "projectUniqueName": "C:\\Users\\te24o\\Documents\\Projects\\MusicPlayerApp\\MusicPlayerApp\\Backend\\Backend.csproj",
         "projectName": "Backend",
-        "projectPath": "C:\\Users\\te24o\\Documents\\Projects\\MusicPlayerApp\\MusicPlayerApp\\backend\\Backend.csproj",
+        "projectPath": "C:\\Users\\te24o\\Documents\\Projects\\MusicPlayerApp\\MusicPlayerApp\\Backend\\Backend.csproj",
         "packagesPath": "C:\\Users\\te24o\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\te24o\\Documents\\Projects\\MusicPlayerApp\\MusicPlayerApp\\backend\\obj\\",
+        "outputPath": "C:\\Users\\te24o\\Documents\\Projects\\MusicPlayerApp\\MusicPlayerApp\\Backend\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
