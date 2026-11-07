@@ -26,7 +26,7 @@ const SETTINGS_PATH = path.join(app.getPath("userData"), "window-settings.json")
 const API_URL = "http://127.0.0.1:5017"
 
 // ================================
-// #region Functions
+// #region Window Functions
 // ================================
 
 function loadWindowSettings() {
@@ -132,8 +132,144 @@ function createWindow() {
     window.loadFile("index.html")
 }
 
+// ================================
+// #region HTTP Endpoint Handlers
+// ================================
+
+async function handleImportFromPath(event, path) {
+    const response = await fetch(`${API_URL}/api/library?path=${path}`)
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+
+    return await response.json()
+}
+
 async function handleGetAlbums() {
     const response = await fetch(`${API_URL}/api/library/albums`)
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+
+    return await response.json()
+}
+
+async function handleGetAlbum(event, albumId) {
+    const response = await fetch(`${API_URL}/api/library/albums/album?albumId=${albumId}`)
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+
+    return await response.json()
+}
+
+async function handleGetPlaylists() {
+    const response = await fetch(`${API_URL}/api/library/playlists`)
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+
+    return await response.json()
+}
+
+async function handleGetPlaylist(event, playlistId) {
+    const response = await fetch(`${API_URL}/api/library/playlists/playlist?playlistId=${playlistId}`)
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+
+    return await response.json()
+}
+
+async function handleCreatePlaylist(event, requestBody) {
+    const request = {
+        method: "POST",
+        headers: { 
+            "Content-Type": "application/json" 
+        },
+        body: JSON.stringify(requestBody)
+    }
+    const response = await fetch(`${API_URL}/api/library/playlists/playlist`, request)
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}\nRequest: ${JSON.stringify(request)}`)
+
+    return await response.json()
+}
+
+async function handleUpdatePlaylistMetadata(event, requestBody) {
+    const request = {
+        method: "PATCH",
+        headers: { 
+            "Content-Type": "application/json" 
+        },
+        body: JSON.stringify(requestBody)
+    }
+    const response = await fetch(`${API_URL}/api/library/playlists/playlist`, request)
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}\nRequest: ${JSON.stringify(request)}`)
+
+    return await response.text()
+}
+
+async function handleDeletePlaylist(event, playlistId) {
+    const response = await fetch(`${API_URL}/api/library/playlists/playlist?playlistId=${playlistId}`)
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}\nRequest: ${JSON.stringify(request)}`)
+
+    return await response.json()
+}
+
+async function handleAddPlaylistTracks(event, requestBody) {
+    const request = {
+        method: "POST",
+        headers: { 
+            "Content-Type": "application/json" 
+        },
+        body: JSON.stringify(requestBody)
+    }
+    const response = await fetch(`${API_URL}/api/library/playlists/playlist/tracks`, request)
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}\nRequest: ${JSON.stringify(request)}`)
+
+    return await response.json()
+}
+
+async function handleMovePlaylistTracks(event, requestBody) {
+    const request = {
+        method: "PATCH",
+        headers: { 
+            "Content-Type": "application/json" 
+        },
+        body: JSON.stringify(requestBody)
+    }
+    const response = await fetch(`${API_URL}/api/library/playlists/playlist/tracks`, request)
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}\nRequest: ${JSON.stringify(request)}`)
+
+    return await response.json()
+}
+
+async function handleRemovePlaylistTracks(event, requestBody) {
+    const params = new URLSearchParams()
+
+    params.append("playlistId", requestBody.playlistId)
+    requestBody.positions.forEach(position => {
+        params.append("positions", position)
+    });
+
+    console.log(`${API_URL}/api/library/playlists/playlist/tracks?${params}`)
+    const response = await fetch(`${API_URL}/api/library/playlists/playlist/tracks?${params}`,
+        { method: "DELETE" }
+    )
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}\nRequest: ${JSON.stringify(requestBody)}`)
+
     return await response.json()
 }
 
@@ -142,7 +278,17 @@ async function handleGetAlbums() {
 // ================================
 
 // API Callback
+ipcMain.handle("import-from-path", handleImportFromPath)
 ipcMain.handle("get-albums", handleGetAlbums)
+ipcMain.handle("get-album", handleGetAlbum)
+ipcMain.handle("get-playlists", handleGetPlaylists)
+ipcMain.handle("get-playlist", handleGetPlaylist)
+ipcMain.handle("create-playlist", handleCreatePlaylist)
+ipcMain.handle("update-playlist-metadata", handleUpdatePlaylistMetadata)
+ipcMain.handle("delete-playlist", handleDeletePlaylist)
+ipcMain.handle("add-playlist-tracks", handleAddPlaylistTracks)
+ipcMain.handle("move-playlist-tracks", handleMovePlaylistTracks)
+ipcMain.handle("remove-playlist-tracks", handleRemovePlaylistTracks)
 
 // Application Window
 app.whenReady().then(() => {

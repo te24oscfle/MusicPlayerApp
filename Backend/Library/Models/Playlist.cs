@@ -71,11 +71,11 @@ namespace MusicLibrary;
             Console.WriteLine($"Added {tracks.Count} tracks to Playlist {Title}");
     }
 
-    public void RemoveTracks(int[] indexes)
+    public void RemoveTracks(int[] positions)
     {
         int removedTracks = 0;
 
-        foreach(int index in indexes)
+        foreach(int index in positions.OrderByDescending(position => position))
         {
             if (index >= 0 && index < _tracks.Count)
             {

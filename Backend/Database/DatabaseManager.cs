@@ -540,7 +540,7 @@ namespace Database
             return playlist;
         }
 
-        public static void DeletePlaylist(Playlist playlist)
+        public static bool DeletePlaylist(Playlist playlist)
         {
             lock(playlistLock)
             {
@@ -553,6 +553,8 @@ namespace Database
                 );
                 if(success)
                     Console.WriteLine($"Deleted Playlist {playlist.Title}");
+                
+                return success;
             }   
         }
 

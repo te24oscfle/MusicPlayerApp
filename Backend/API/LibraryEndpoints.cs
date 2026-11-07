@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Mvc;
+
 using Database;
 using MusicLibrary;
 
@@ -6,10 +8,9 @@ namespace API;
 public static class LibraryEndpoints
 {
     public record ImportFromPathRequest(string Path);
-    public record GetAlbumRequest(int AlbumId);
-    public record GetPlaylistRequest(int PlaylistId);
     public record CreatePlaylistRequest(string PlaylistTitle, PlaylistType PlaylistType);
     public record UpdatePlaylistMetadataRequest(int PlaylistId, string? Title, string? Description, string? ImageFilePath);
+    public record DeletePlaylistRequest(int PlaylistId);
     public record AddPlaylistTracksRequest(int PlaylistId, int[] TrackIds);
     public record RemovePlaylistTracksRequest(int PlaylistId, int[] Positions);
     public record MovePlaylistTracksRequest(int PlaylistId, int[] Positions, int TargetIndex);
@@ -31,16 +32,18 @@ public static class LibraryEndpoints
             return Results.Ok(albums);
         });
 
-        app.MapGet("/api/library/albums/album", (GetAlbumRequest request) =>
+        app.MapGet("/api/library/albums/album", ([FromQuery] int albumId) =>
         {
-            if(request.AlbumId <= 0)
+            Console.WriteLine(albumId);
+
+            if(albumId <= 0)
                 return Results.BadRequest("Invalid albumId.");
             
             HashSet<Album> albums = Library.GetAlbums();
-            Album? album = albums.FirstOrDefault(album => album.AlbumId == request.AlbumId);
-            
+            Album? album = albums.FirstOrDefault(album => album.AlbumId == albumId);
+
             if(album is null)
-                return Results.NotFound($"No album with albumId {request.AlbumId}.");
+                return Results.NotFound($"No album with albumId {albumId}.");
             return Results.Ok(albums);
         });
 
@@ -50,20 +53,23 @@ public static class LibraryEndpoints
            return Results.Ok(playlists); 
         });
 
-        app.MapGet("/api/library/playlists/playlist", (GetPlaylistRequest request) =>
+        app.MapGet("/api/library/playlists/playlist", ([FromQuery] int playlistId) =>
         {
-            if(request.PlaylistId <= 0)
+            if(playlistId <= 0)
                 return Results.BadRequest("Invalid playlistId.");
             
-            Playlist? playlist = DatabaseManager.GetPlaylistFromPlaylistId(request.PlaylistId);
+            Playlist? playlist = DatabaseManager.GetPlaylistFromPlaylistId(playlistId);
             if(playlist is null)
-                return Results.NotFound($"No playlist with playlistId {request.PlaylistId}.");
+                return Results.NotFound($"No playlist with playlistId {playlistId}.");
 
             return Results.Ok(playlist); 
         });
 
         app.MapPost("/api/library/playlists/playlist", (CreatePlaylistRequest request) =>
         {
+            if(!Enum.IsDefined(request.PlaylistType))
+                return Results.BadRequest("Invalid PlaylistType.");
+            
             Playlist playlist = new Playlist(request.PlaylistTitle, request.PlaylistType);
             bool hasId = DatabaseManager.AddPlaylist(playlist);
 
@@ -79,6 +85,9 @@ public static class LibraryEndpoints
             if(request.PlaylistId <= 0)
                 return Results.BadRequest("Invalid playlistId.");
             
+            if(!string.IsNullOrEmpty(request.ImageFilePath) && File.Exists(request.ImageFilePath))
+                return Results.BadRequest("Invalid ImageFilePath.");
+            
             Playlist? playlist = DatabaseManager.GetPlaylistFromPlaylistId(request.PlaylistId);
             if(playlist is null)
                 return Results.NotFound($"No playlist with playlistId {request.PlaylistId}.");
@@ -88,6 +97,22 @@ public static class LibraryEndpoints
                 return Results.Ok();
             else
                 return Results.InternalServerError("Could not update metadata to database.");
+        });
+
+        app.MapDelete("/api/library/playlists/playlist", ([FromQuery] int playlistId) =>
+        {
+            if(playlistId <= 0)
+                return Results.BadRequest("Invalid playlistId.");
+            
+            Playlist? playlist = DatabaseManager.GetPlaylistFromPlaylistId(playlistId);
+            if(playlist is null)
+                return Results.NotFound($"No playlist with playlistId {playlistId}.");
+            
+            bool success = DatabaseManager.DeletePlaylist(playlist);
+            if(success)
+                return Results.Ok();
+            else
+                return Results.InternalServerError("Could not delete playlist from database.");
         });
 
         app.MapPost("/api/library/playlists/playlist/tracks", (AddPlaylistTracksRequest request) =>
@@ -104,7 +129,7 @@ public static class LibraryEndpoints
                 .ToList();
             
             playlist.AddTracks(tracks);
-            return Results.Ok(playlist.Tracks);
+            return Results.Ok(tracks);
         });
 
         app.MapPatch("/api/library/playlists/playlist/tracks", (MovePlaylistTracksRequest request) =>
@@ -131,20 +156,30 @@ public static class LibraryEndpoints
             return Results.Ok(playlist.Tracks);
         });
 
-        app.MapDelete("/api/library/playlists/playlist/tracks", (RemovePlaylistTracksRequest request) =>
+        app.MapDelete("/api/library/playlists/playlist/tracks", ([FromQuery] int playlistId, [FromQuery] int[] positions) =>
         {
-            if(request.PlaylistId <= 0)
+            if(playlistId <= 0)
                 return Results.BadRequest("Invalid playlistId.");
             
-            Playlist? playlist = DatabaseManager.GetPlaylistFromPlaylistId(request.PlaylistId);
+            Playlist? playlist = DatabaseManager.GetPlaylistFromPlaylistId(playlistId);
             if(playlist is null)
-                return Results.NotFound($"No playlist with playlistId {request.PlaylistId}.");
+                return Results.NotFound($"No playlist with playlistId {playlistId}.");
             
-            int[] validatedPositions = request.Positions
+            foreach(int pos in positions)
+            {
+                Console.Write(pos.ToString() + " ");
+            }
+
+            int[] validatedPositions = positions
                 .Distinct()
                 .Where(position => position >= 0 && position < playlist.Tracks.Count)
                 .ToArray();
             
+            foreach(int pos in validatedPositions)
+            {
+                Console.Write(pos.ToString() + " ");
+            }
+
             if(validatedPositions.Length == 0)
                 return Results.NoContent();
 
