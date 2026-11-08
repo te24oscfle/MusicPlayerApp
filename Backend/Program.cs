@@ -26,6 +26,7 @@ AudioPlayer.InitilizeAudioPlayer();
 
 // Map Endpoints
 app.MapLibraryEndpoints();
+app.MapQueueEndpoints();
 
 // Start debug console
 DebugConsole console = new DebugConsole();

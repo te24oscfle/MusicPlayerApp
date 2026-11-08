@@ -138,7 +138,12 @@ namespace Playback
             if (!addToFront || Queue.Count == 0)
                 Queue.AddRange(queueItems);
             else
-                Queue.InsertRange(currentIndex + 1, queueItems);
+            {
+                int targetIndex = currentIndex + 1;
+                while (targetIndex < Queue.Count && Queue[targetIndex].IsPersistent is false)
+                    targetIndex++;
+                Queue.InsertRange(targetIndex, queueItems);
+            }
 
             Console.WriteLine($"Added {tracks.Count} tracks");
         }
