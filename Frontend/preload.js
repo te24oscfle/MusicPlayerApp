@@ -12,5 +12,15 @@ contextBridge.exposeInMainWorld('api', {
     deletePlaylist: (playlistId) => ipcRenderer.invoke("delete-playlist", playlistId),
     addPlaylistTracks: (requestBody) => ipcRenderer.invoke("add-playlist-tracks", requestBody),
     movePlaylistTracks: (requestBody) => ipcRenderer.invoke("move-playlist-tracks", requestBody),
-    removePlaylistTracks: (requestBody) => ipcRenderer.invoke("remove-playlist-tracks", requestBody)
+    removePlaylistTracks: (requestBody) => ipcRenderer.invoke("remove-playlist-tracks", requestBody),
+
+    getQueue: () => ipcRenderer.invoke("get-queue"),
+    addQueueTracks: (trackIds) => ipcRenderer.invoke("add-queue-tracks", trackIds),
+    moveQueueTracks: (requestBody) => ipcRenderer.invoke("move-queue-tracks", requestBody),
+    removeQueueTracks: (positions) => ipcRenderer.invoke("remove-queue-tracks", positions),
+    clearQueue: () => ipcRenderer.invoke("clear-queue"),
+    setLoopState: (loopState) => ipcRenderer.invoke("set-loop-state", loopState),
+    setShuffleState: (shuffleState) => ipcRenderer.invoke("set-shuffle-state", shuffleState),
+    playAlbum: (albumId) => ipcRenderer.invoke("play-album", albumId),
+    playPlaylist: (playlistId) => ipcRenderer.invoke("play-playlist", playlistId)
 })

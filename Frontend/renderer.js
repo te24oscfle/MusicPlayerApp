@@ -80,4 +80,60 @@ async function testLibraryEndpoints() {
     console.log(deletePlaylistResponse)
 }
 
-testLibraryEndpoints()
+async function testQueueEndpoints() {
+    // Add track to queue
+    const addTrackResponse = await window.api.addQueueTracks([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    console.log("AddQueueTracks Response:")
+    console.log(addTrackResponse)
+    
+    // Move tracks
+    const moveTracksResponse = await window.api.moveQueueTracks({
+        positions: [7, 8, 9],
+        targetIndex: 4
+    })
+    console.log("MoveQueueTracks Response:")
+    console.log(moveTracksResponse)
+
+    // Remove Tracks
+    const removeTracksResponse = await window.api.removeQueueTracks([7, 8, 9])
+    console.log("RemoveQueueTracks Response:")
+    console.log(removeTracksResponse)
+
+    // Get Queue
+    const getQueueResponse = await window.api.getQueue()
+    console.log("GetQueue Response:")
+    console.log(getQueueResponse)
+
+    // Set Loop State
+    const setLoopResponse = await window.api.setLoopState("Disabled")
+    console.log("SetLoopState Response:")
+    console.log(setLoopResponse)
+
+    // Set Shuffle State
+    const setShuffleResponse = await window.api.setShuffleState("Enabled")
+    console.log("SetShuffleState Response:")
+    console.log(setShuffleResponse)
+
+    // Clear Queue
+    const clearQueueResponse = await window.api.clearQueue()
+    console.log("ClearQueue Response:")
+    console.log(clearQueueResponse)
+
+    console.log("Queue:")
+    console.log(await window.api.getQueue())
+
+    // Play Album
+    const playAlbumResponse = await window.api.playAlbum(1)
+    console.log("PlayAlbum Response:")
+    console.log(playAlbumResponse)
+
+    // Play Playlist
+    setTimeout(async () => {
+        const playPlaylistResponse = await window.api.playPlaylist(1)
+        console.log("PlayPlaylist Response:")
+        console.log(playPlaylistResponse)
+    }, 5 * 1000)
+}
+
+// testLibraryEndpoints()
+testQueueEndpoints()

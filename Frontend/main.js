@@ -136,6 +136,8 @@ function createWindow() {
 // #region HTTP Endpoint Handlers
 // ================================
 
+//#region Library
+
 async function handleImportFromPath(event, path) {
     const response = await fetch(`${API_URL}/api/library?path=${path}`, { method: "POST"})
 
@@ -293,11 +295,115 @@ async function handleRemovePlaylistTracks(event, requestBody) {
     return await response.json()
 }
 
+//#region Queue
+async function handleGetQueue() {
+    const response = await fetch(`${API_URL}/api/queue/tracks`)
+    
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+
+    return await response.json()
+}
+
+async function handleAddQueueTracks(event, trackIds) {
+    const request = {
+        method: "POST",
+        headers: { 
+            "Content-Type": "application/json" 
+        },
+        body: JSON.stringify(trackIds)
+    }
+    const response = await fetch(`${API_URL}/api/queue/tracks`, request)
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}\nRequest: ${JSON.stringify(trackIds)}`)
+
+    return await response.json()
+}
+
+async function handleMoveQueueTracks(event, requestBody) {
+    const request = {
+        method: "PATCH",
+        headers: { 
+            "Content-Type": "application/json" 
+        },
+        body: JSON.stringify(requestBody)
+    }
+    const response = await fetch(`${API_URL}/api/queue/tracks`, request)
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}\nRequest: ${JSON.stringify(requestBody)}`)
+
+    return await response.json()
+}
+
+async function handleRemoveQueueTracks(event, positions) {
+    const params = new URLSearchParams()
+
+    positions.forEach(position => {
+        params.append("positions", position)
+    });
+
+    const response = await fetch(`${API_URL}/api/queue/tracks?${params}`,
+        { method: "DELETE" }
+    )
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}\nRequest: ${JSON.stringify(positions)}`)
+
+    return await response.json()
+}
+
+async function handleClearQueue() {
+    const response = await fetch(`${API_URL}/api/queue`, {method: "DELETE"})
+    
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+
+    return await response
+}
+
+async function handleSetLoopState(event, loopState) {
+    const response = await fetch(`${API_URL}/api/queue/loopState?loopState=${loopState}`, {method: "PATCH"})
+    
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+
+    return await response.json()
+}
+
+async function handleSetShuffleState(event, shuffleState) {
+    const response = await fetch(`${API_URL}/api/queue/shuffleState?shuffleState=${shuffleState}`, {method: "PATCH"})
+    
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+
+    return await response.json()
+}
+
+async function handlePlayAlbum(event, albumId) {
+    const response = await fetch(`${API_URL}/api/queue/album?albumId=${albumId}`, {method: "PATCH"})
+    
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+
+    return await response
+}
+
+async function handlePlayPlaylist(event, playlistId) {
+    const response = await fetch(`${API_URL}/api/queue/playlist?playlistId=${playlistId}`, {method: "PATCH"})
+    
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+
+    return await response
+}
+
 // ================================
 // #region Runtime
 // ================================
 
-// API Callback
+// Library Callbacks
 ipcMain.handle("import-from-path", handleImportFromPath)
 ipcMain.handle("get-albums", handleGetAlbums)
 ipcMain.handle("get-album", handleGetAlbum)
@@ -310,6 +416,17 @@ ipcMain.handle("delete-playlist", handleDeletePlaylist)
 ipcMain.handle("add-playlist-tracks", handleAddPlaylistTracks)
 ipcMain.handle("move-playlist-tracks", handleMovePlaylistTracks)
 ipcMain.handle("remove-playlist-tracks", handleRemovePlaylistTracks)
+
+// Queue Callbaks
+ipcMain.handle("get-queue", handleGetQueue)
+ipcMain.handle("add-queue-tracks", handleAddQueueTracks)
+ipcMain.handle("move-queue-tracks", handleMoveQueueTracks)
+ipcMain.handle("remove-queue-tracks", handleRemoveQueueTracks)
+ipcMain.handle("clear-queue", handleClearQueue)
+ipcMain.handle("set-loop-state", handleSetLoopState)
+ipcMain.handle("set-shuffle-state", handleSetShuffleState)
+ipcMain.handle("play-album", handlePlayAlbum)
+ipcMain.handle("play-playlist", handlePlayPlaylist)
 
 // Application Window
 app.whenReady().then(() => {

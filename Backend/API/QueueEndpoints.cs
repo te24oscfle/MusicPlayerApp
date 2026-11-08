@@ -21,7 +21,7 @@ public static class QueueEndpoints
             });
         });
         
-        app.MapPost("/api/queue/tracks", ([FromQuery] int[] trackIds) =>
+        app.MapPost("/api/queue/tracks", ([FromBody] int[] trackIds) =>
         {
             if(trackIds is null || trackIds.Length == 0)
                 return Results.BadRequest("No trackIds provided");
@@ -57,7 +57,7 @@ public static class QueueEndpoints
                 return Results.NoContent();
             
             QueueManager.MoveTracks(validatedPositions, request.TargetIndex);
-            return Results.Ok();
+            return Results.Ok(QueueManager.Queue);
         });
 
         app.MapDelete("/api/queue/tracks", ([FromQuery] int[] positions) =>
@@ -74,7 +74,7 @@ public static class QueueEndpoints
                 return Results.NoContent();
 
             QueueManager.RemoveTracksFromQueue(validatedPositions);
-            return Results.Ok();
+            return Results.Ok(QueueManager.Queue);
         });
 
         app.MapDelete("/api/queue", () =>
@@ -89,7 +89,7 @@ public static class QueueEndpoints
                 return Results.BadRequest("Invalid loopState.");
             
             QueueManager.SetLoopState(loopState);
-            return Results.Ok();
+            return Results.Ok(QueueManager.LoopState.ToString());
         });
 
         app.MapPatch("/api/queue/shuffleState", ([FromQuery] ShuffleState shuffleState) =>
@@ -98,7 +98,7 @@ public static class QueueEndpoints
                 return Results.BadRequest("Invalid shuffleState.");
             
             QueueManager.SetShuffleState(shuffleState);
-            return Results.Ok();
+            return Results.Ok(QueueManager.ShuffleState.ToString());
         });
 
         app.MapPatch("/api/queue/album", ([FromQuery] int albumId) =>
