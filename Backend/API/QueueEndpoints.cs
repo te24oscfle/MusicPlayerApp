@@ -7,8 +7,19 @@ namespace API;
 
 public static class QueueEndpoints
 {
+    public record MoveQueueTracksRequest(int[] Positions, int TargetIndex);
+
     public static void MapQueueEndpoints(this WebApplication app)
     {
+        app.MapGet("/api/queue/tracks", () =>
+        {
+            return Results.Ok(new
+            {
+                QueueManager.Queue,
+                QueueManager.CurrentIndex
+            });
+        });
+        
         app.MapPost("/api/queue/tracks", ([FromQuery] int[] trackIds) =>
         {
             if(trackIds is null || trackIds.Length == 0)
@@ -26,6 +37,49 @@ public static class QueueEndpoints
             
             QueueManager.AddTracksToQueue(tracks, false, true);
             return Results.Ok(QueueManager.Queue);
+        });
+
+        app.MapPatch("/api/queue/tracks", (MoveQueueTracksRequest request) =>
+        {
+            if(request.Positions is null || request.Positions.Length == 0)
+                return Results.BadRequest("No positions provided.");
+            
+            if(request.TargetIndex < 0 || request.TargetIndex >= QueueManager.Queue.Count)
+                return Results.BadRequest("Invalid targetIndex.");
+            
+            int[] validatedPositions = request.Positions
+                .Distinct()
+                .Where(position => position >= 0 && position < QueueManager.Queue.Count)
+                .ToArray();
+            
+            if(validatedPositions.Length == 0)
+                return Results.NoContent();
+            
+            QueueManager.MoveTracks(validatedPositions, request.TargetIndex);
+            return Results.Ok();
+        });
+
+        app.MapDelete("/api/queue/tracks", ([FromQuery] int[] positions) =>
+        {
+            if(positions is null || positions.Length == 0)
+                return Results.BadRequest("No positions provided.");
+            
+            int[] validatedPositions = positions
+                .Distinct()
+                .Where(position => position >= 0 && position < QueueManager.Queue.Count)
+                .ToArray();
+            
+            if(validatedPositions.Length == 0)
+                return Results.NoContent();
+
+            QueueManager.RemoveTracksFromQueue(validatedPositions);
+            return Results.Ok();
+        });
+
+        app.MapDelete("/api/queue", () =>
+        {
+            QueueManager.ClearQueue();
+            return Results.Ok();
         });
     }
 }
