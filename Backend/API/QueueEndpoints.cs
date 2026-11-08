@@ -1,3 +1,4 @@
+using Database;
 using Microsoft.AspNetCore.Mvc;
 
 using MusicLibrary;
@@ -79,6 +80,50 @@ public static class QueueEndpoints
         app.MapDelete("/api/queue", () =>
         {
             QueueManager.ClearQueue();
+            return Results.Ok();
+        });
+
+        app.MapPatch("/api/queue/loopState", ([FromQuery] LoopState loopState) =>
+        {
+            if(!Enum.IsDefined(loopState))
+                return Results.BadRequest("Invalid loopState.");
+            
+            QueueManager.SetLoopState(loopState);
+            return Results.Ok();
+        });
+
+        app.MapPatch("/api/queue/shuffleState", ([FromQuery] ShuffleState shuffleState) =>
+        {
+            if(!Enum.IsDefined(shuffleState))
+                return Results.BadRequest("Invalid shuffleState.");
+            
+            QueueManager.SetShuffleState(shuffleState);
+            return Results.Ok();
+        });
+
+        app.MapPatch("/api/queue/album", ([FromQuery] int albumId) =>
+        {
+            if(albumId <= 0)
+                return Results.BadRequest("Invalid albumId.");
+            
+            Album? album = Library.GetAlbumFromAlbumId(albumId);
+            if(album is null)
+                return Results.NotFound($"No album with albumId {albumId}");
+            
+            QueueManager.PlayAlbum(album);
+            return Results.Ok();
+        });
+
+        app.MapPatch("/api/queue/playlist", ([FromQuery] int playlistId) =>
+        {
+            if(playlistId <= 0)
+                return Results.BadRequest("Invalid playlistId.");
+            
+            Playlist? playlist = DatabaseManager.GetPlaylistFromPlaylistId(playlistId);
+            if(playlist is null)
+                return Results.NotFound($"No album with playlistId {playlistId}");
+            
+            QueueManager.PlayPlaylist(playlist);
             return Results.Ok();
         });
     }
