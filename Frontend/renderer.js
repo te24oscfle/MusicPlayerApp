@@ -19,6 +19,11 @@ async function testLibraryEndpoints() {
     console.log(`GetPlaylists Response:`)
     console.log(getPlaylistsResponse)
 
+    // DeletePlaylists
+    // const deletePlaylistsRespone = await window.api.deletePlaylists([2, 3, 4, 5, 6, 7])
+    // console.log(`DeletePlaylistsRespone Response:`)
+    // console.log(deletePlaylistsRespone)
+
     // CreatePlaylist
     const playlist = await window.api.createPlaylist({
         playlistTitle: "My Playlist",

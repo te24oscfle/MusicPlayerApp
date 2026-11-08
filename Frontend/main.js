@@ -172,6 +172,24 @@ async function handleGetPlaylists() {
     return await response.json()
 }
 
+async function handleDeletePlaylists(event, playlistIds) {
+    const params = new URLSearchParams()
+
+    playlistIds.forEach(position => {
+        params.append("playlistIds", position)
+    });
+
+    console.log(`${API_URL}/api/library/playlists?${params}`)
+    const response = await fetch(`${API_URL}/api/library/playlists?${params}`,
+        { method: "DELETE" }
+    )
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}\nRequest: ${JSON.stringify(playlistIds)}`)
+
+    return await response.json()
+}
+
 async function handleGetPlaylist(event, playlistId) {
     const response = await fetch(`${API_URL}/api/library/playlists/playlist?playlistId=${playlistId}`)
 
@@ -214,7 +232,10 @@ async function handleUpdatePlaylistMetadata(event, requestBody) {
 }
 
 async function handleDeletePlaylist(event, playlistId) {
-    const response = await fetch(`${API_URL}/api/library/playlists/playlist?playlistId=${playlistId}`)
+    const response = await fetch(
+        `${API_URL}/api/library/playlists/playlist?playlistId=${playlistId}`, 
+        { method: "DELETE" }
+    )
 
     if(!response.ok)
         throw new Error(`${response.status} ${response.statusText}\nRequest: ${JSON.stringify(request)}`)
@@ -262,7 +283,6 @@ async function handleRemovePlaylistTracks(event, requestBody) {
         params.append("positions", position)
     });
 
-    console.log(`${API_URL}/api/library/playlists/playlist/tracks?${params}`)
     const response = await fetch(`${API_URL}/api/library/playlists/playlist/tracks?${params}`,
         { method: "DELETE" }
     )
@@ -282,6 +302,7 @@ ipcMain.handle("import-from-path", handleImportFromPath)
 ipcMain.handle("get-albums", handleGetAlbums)
 ipcMain.handle("get-album", handleGetAlbum)
 ipcMain.handle("get-playlists", handleGetPlaylists)
+ipcMain.handle("delete-playlists", handleDeletePlaylists)
 ipcMain.handle("get-playlist", handleGetPlaylist)
 ipcMain.handle("create-playlist", handleCreatePlaylist)
 ipcMain.handle("update-playlist-metadata", handleUpdatePlaylistMetadata)

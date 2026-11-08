@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('api', {
     getAlbums: () => ipcRenderer.invoke("get-albums"),
     getAlbum: (albumId) => ipcRenderer.invoke("get-album", albumId),
     getPlaylists: () => ipcRenderer.invoke("get-playlists"),
+    deletePlaylists: (playlistIds) => ipcRenderer.invoke("delete-playlists", playlistIds),
     getPlaylist: (playlistId) => ipcRenderer.invoke("get-playlist", playlistId),
     createPlaylist: (requestBody) => ipcRenderer.invoke("create-playlist", requestBody),
     updatePlaylistMetadata: (requestBody) => ipcRenderer.invoke("update-playlist-metadata", requestBody),
