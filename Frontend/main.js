@@ -137,12 +137,12 @@ function createWindow() {
 // ================================
 
 async function handleImportFromPath(event, path) {
-    const response = await fetch(`${API_URL}/api/library?path=${path}`)
+    const response = await fetch(`${API_URL}/api/library?path=${path}`, { method: "POST"})
 
     if(!response.ok)
         throw new Error(`${response.status} ${response.statusText}`)
 
-    return await response.json()
+    return await response.text()
 }
 
 async function handleGetAlbums() {
@@ -210,7 +210,7 @@ async function handleUpdatePlaylistMetadata(event, requestBody) {
     if(!response.ok)
         throw new Error(`${response.status} ${response.statusText}\nRequest: ${JSON.stringify(request)}`)
 
-    return await response.text()
+    return await response.json()
 }
 
 async function handleDeletePlaylist(event, playlistId) {

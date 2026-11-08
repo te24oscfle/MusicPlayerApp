@@ -55,7 +55,7 @@ namespace MusicLibrary;
         // Use the new value if it exists, else keep using value already assigned
         Title = title ?? Title;
         Description = description ?? Description;
-        ImageFilePath = ImageFilePath ?? ImageFilePath;
+        ImageFilePath = imageFilePath ?? ImageFilePath;
 
         return DatabaseManager.UpdatePlaylistMetadata(this);
     }

@@ -7,7 +7,6 @@ namespace API;
 
 public static class LibraryEndpoints
 {
-    public record ImportFromPathRequest(string Path);
     public record CreatePlaylistRequest(string PlaylistTitle, PlaylistType PlaylistType);
     public record UpdatePlaylistMetadataRequest(int PlaylistId, string? Title, string? Description, string? ImageFilePath);
     public record DeletePlaylistRequest(int PlaylistId);
@@ -17,12 +16,12 @@ public static class LibraryEndpoints
 
     public static void MapLibraryEndpoints(this WebApplication app)
     {
-        app.MapPost("/api/library", (ImportFromPathRequest request) =>
+        app.MapPost("/api/library", ([FromQuery] string path) =>
         {
-            if(!Path.Exists(request.Path) || !Directory.Exists(request.Path))
+            if(!Path.Exists(path) || !Directory.Exists(path))
                 return Results.BadRequest("Invalid path.");
             
-            Library.ImportFromPath(request.Path);
+            Library.ImportFromPath(path);
             return Results.Ok();
         });
         
@@ -88,13 +87,15 @@ public static class LibraryEndpoints
             if(!string.IsNullOrEmpty(request.ImageFilePath) && File.Exists(request.ImageFilePath))
                 return Results.BadRequest("Invalid ImageFilePath.");
             
+            Console.WriteLine($"ImageFilePath: {request.ImageFilePath}");
+
             Playlist? playlist = DatabaseManager.GetPlaylistFromPlaylistId(request.PlaylistId);
             if(playlist is null)
                 return Results.NotFound($"No playlist with playlistId {request.PlaylistId}.");
             
             bool success = playlist.UpdateMetadata(request.Title, request.Description, request.ImageFilePath);
             if(success)
-                return Results.Ok();
+                return Results.Ok(playlist);
             else
                 return Results.InternalServerError("Could not update metadata to database.");
         });

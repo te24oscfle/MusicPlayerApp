@@ -1,7 +1,8 @@
-async function main() {
+async function testLibraryEndpoints() {
     // ImportFromPath
-    // const importResponse = await window.api.importFromPath("E:/Music Library/Hurula/Klass")
-    // console.log(`ImportFromPath Response: ${importResponse}`)
+    const importResponse = await window.api.importFromPath("E:/Music Library/Hurula/Klass")
+    console.log(`ImportFromPath Response`)
+    console.log(importResponse)
 
     // GetAlbums
     const getAlbumsResponse = await window.api.getAlbums()
@@ -19,16 +20,18 @@ async function main() {
     console.log(getPlaylistsResponse)
 
     // CreatePlaylist
-    const createPlaylistResponse = await window.api.createPlaylist({
+    const playlist = await window.api.createPlaylist({
         playlistTitle: "My Playlist",
         playlistType: "Manual"
     })
     console.log(`CreatePlaylist Response:`)
-    console.log(createPlaylistResponse)
+    console.log(playlist)
+
+    console.log(playlist.playlistId)
 
     // UpdatePlaylistMetadata
     const updatePlaylistResponse = await window.api.updatePlaylistMetadata({
-        playlistId: 2,
+        playlistId: playlist.playlistId,
         title: "My Favourite Playlist",
         description: "This is my favourite playlist with my favourite songs in it.",
         imageFilePath: "C:/Users/Oscar/Pictures/Blue Emojis/01"
@@ -38,7 +41,7 @@ async function main() {
 
     // AddPlaylistTracks
     const addPlaylistTracksResponse = await window.api.addPlaylistTracks({
-        playlistId: 2,
+        playlistId: playlist.playlistId,
         trackIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     })
     console.log(`AddPlaylistTracks Response:`)
@@ -46,7 +49,7 @@ async function main() {
 
     // MovePlaylistTracks
     const movePlaylistTracksResponse = await window.api.movePlaylistTracks({
-        playlistId: 2,
+        playlistId: playlist.playlistId,
         positions: [7, 8, 9],
         targetIndex: 4
     })
@@ -55,21 +58,21 @@ async function main() {
 
     // RemovePlaylistTracks
     const removePlaylistTracksResponse = await window.api.removePlaylistTracks({
-        playlistId: 2,
+        playlistId: playlist.playlistId,
         positions: [7, 8, 9]
     })
     console.log(`RemovePlaylistTracks Response:`)
     console.log(removePlaylistTracksResponse)
 
     // GetPlaylist
-    const getPlaylistResponse = await window.api.getPlaylist(2)
+    const getPlaylistResponse = await window.api.getPlaylist(playlist.playlistId)
     console.log(`GetPlaylist Response:`)
     console.log(getPlaylistResponse)
 
     // DeletePlaylist
-    const deletePlaylistResponse = await window.api.deletePlaylist(2)
+    const deletePlaylistResponse = await window.api.deletePlaylist(playlist.playlistId)
     console.log(`DeletePlaylist Response:`)
     console.log(deletePlaylistResponse)
 }
 
-main()
+testLibraryEndpoints()
