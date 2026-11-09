@@ -399,6 +399,57 @@ async function handlePlayPlaylist(event, playlistId) {
     return await response
 }
 
+async function handleGetPlaybackState() {
+    const response = await fetch(`${API_URL}/api/playback`)
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+
+    return await response.json()
+}
+
+async function handlePlay() {
+    const response = await fetch(`${API_URL}/api/playback/play`, {method: "POST"})
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+}
+
+async function handlePause() {
+    const response = await fetch(`${API_URL}/api/playback/pause`, {method: "POST"})
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+}
+
+async function handleNext() {
+    const response = await fetch(`${API_URL}/api/playback/next`, {method: "POST"})
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+}
+
+async function handlePrevious() {
+    const response = await fetch(`${API_URL}/api/playback/previous`, {method: "POST"})
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+}
+
+async function handleSetVolume(event, volume) {
+    const response = await fetch(`${API_URL}/api/playback/volume?volume=${volume}`, {method: "PATCH"})
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+}
+
+async function handleSeek(event, positionInSeconds) {
+    const response = await fetch(`${API_URL}/api/playback/seek?positionInSeconds=${positionInSeconds}`, {method: "PATCH"})
+
+    if(!response.ok)
+        throw new Error(`${response.status} ${response.statusText}`)
+}
+
 // ================================
 // #region Runtime
 // ================================
@@ -427,6 +478,15 @@ ipcMain.handle("set-loop-state", handleSetLoopState)
 ipcMain.handle("set-shuffle-state", handleSetShuffleState)
 ipcMain.handle("play-album", handlePlayAlbum)
 ipcMain.handle("play-playlist", handlePlayPlaylist)
+
+// Playback Callbacks
+ipcMain.handle("get-playback-state", handleGetPlaybackState)
+ipcMain.handle("play", handlePlay)
+ipcMain.handle("pause", handlePause)
+ipcMain.handle("next", handleNext)
+ipcMain.handle("previous", handlePrevious)
+ipcMain.handle("set-volume", handleSetVolume)
+ipcMain.handle("seek", handleSeek)
 
 // Application Window
 app.whenReady().then(() => {

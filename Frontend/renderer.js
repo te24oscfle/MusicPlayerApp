@@ -135,5 +135,58 @@ async function testQueueEndpoints() {
     }, 5 * 1000)
 }
 
+async function testPlaybackEndpoints() {
+    const INTERVAL_DURATION = 3 * 1000
+    
+    await window.api.playAlbum(1)
+
+    const playbackState = await window.api.getPlaybackState()
+    console.log("PlaybackState:")
+    console.log(playbackState)
+
+    await setTimeout(async () => {
+        await window.api.pause()
+        const playbackState = await window.api.getPlaybackState()
+        console.log("PlaybackState:")
+        console.log(playbackState)
+    }, INTERVAL_DURATION)
+
+    await setTimeout(async () => {
+        await window.api.play()
+        const playbackState = await window.api.getPlaybackState()
+        console.log("PlaybackState:")
+        console.log(playbackState)
+    }, INTERVAL_DURATION*2)
+
+    await setTimeout(async () => {
+        await window.api.next()
+        const playbackState = await window.api.getPlaybackState()
+        console.log("PlaybackState:")
+        console.log(playbackState)
+    }, INTERVAL_DURATION*3)
+
+    await setTimeout(async () => {
+        await window.api.previous()
+        const playbackState = await window.api.getPlaybackState()
+        console.log("PlaybackState:")
+        console.log(playbackState)
+    }, INTERVAL_DURATION*4)
+
+    await setTimeout(async () => {
+        await window.api.setVolume(25)
+        const playbackState = await window.api.getPlaybackState()
+        console.log("PlaybackState:")
+        console.log(playbackState)
+    }, INTERVAL_DURATION*5)
+
+    await setTimeout(async () => {
+        await window.api.seek(180)
+        const playbackState = await window.api.getPlaybackState()
+        console.log("PlaybackState:")
+        console.log(playbackState)
+    }, INTERVAL_DURATION*6)
+}
+
 // testLibraryEndpoints()
-testQueueEndpoints()
+// testQueueEndpoints()
+// testPlaybackEndpoints()

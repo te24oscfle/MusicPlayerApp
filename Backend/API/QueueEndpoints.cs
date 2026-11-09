@@ -101,6 +101,7 @@ public static class QueueEndpoints
             return Results.Ok(QueueManager.ShuffleState.ToString());
         });
 
+        // TODO: Add int StartIndex and start playing album from StartIndex. if startIndex is invalid, play from 0.
         app.MapPatch("/api/queue/album", ([FromQuery] int albumId) =>
         {
             if(albumId <= 0)
@@ -114,6 +115,7 @@ public static class QueueEndpoints
             return Results.Ok();
         });
 
+        // TODO: Add int StartIndex and start playing album from StartIndex. if startIndex is invalid, play from 0.
         app.MapPatch("/api/queue/playlist", ([FromQuery] int playlistId) =>
         {
             if(playlistId <= 0)

@@ -8,7 +8,10 @@ namespace Playback
         Track? CurrentTrack,
         bool IsPlaying,
         float Position,
-        int Volume
+        LoopState LoopState,
+        ShuffleState ShuffleState,
+        int Volume,
+        DateTime GenerationTimestamp
     );
 
     public static class AudioPlayer
@@ -75,7 +78,10 @@ namespace Playback
                 currentTrack, 
                 IsPlaying(), 
                 GetCurrentPosition(), 
-                GetVolume()
+                QueueManager.LoopState,
+                QueueManager.ShuffleState,
+                GetVolume(),
+                DateTime.UtcNow
             );
         }
 
