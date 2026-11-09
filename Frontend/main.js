@@ -381,8 +381,12 @@ async function handleSetShuffleState(event, shuffleState) {
     return await response.json()
 }
 
-async function handlePlayAlbum(event, albumId) {
-    const response = await fetch(`${API_URL}/api/queue/album?albumId=${albumId}`, {method: "PATCH"})
+async function handlePlayAlbum(event, albumId, startIndex) {
+    const params = new URLSearchParams()
+    params.append("albumId", albumId)
+    params.append("startIndex", startIndex)
+    
+    const response = await fetch(`${API_URL}/api/queue/album?${params}`, {method: "PATCH"})
     
     if(!response.ok)
         throw new Error(`${response.status} ${response.statusText}`)
@@ -390,8 +394,12 @@ async function handlePlayAlbum(event, albumId) {
     return await response
 }
 
-async function handlePlayPlaylist(event, playlistId) {
-    const response = await fetch(`${API_URL}/api/queue/playlist?playlistId=${playlistId}`, {method: "PATCH"})
+async function handlePlayPlaylist(event, playlistId, startIndex) {
+    const params = new URLSearchParams()
+    params.append("playlistId", playlistId)
+    params.append("startIndex", startIndex)
+    
+    const response = await fetch(`${API_URL}/api/queue/playlist?${params}`, {method: "PATCH"})
     
     if(!response.ok)
         throw new Error(`${response.status} ${response.statusText}`)

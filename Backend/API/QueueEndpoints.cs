@@ -102,7 +102,7 @@ public static class QueueEndpoints
         });
 
         // TODO: Add int StartIndex and start playing album from StartIndex. if startIndex is invalid, play from 0.
-        app.MapPatch("/api/queue/album", ([FromQuery] int albumId) =>
+        app.MapPatch("/api/queue/album", ([FromQuery] int albumId, int startIndex) =>
         {
             if(albumId <= 0)
                 return Results.BadRequest("Invalid albumId.");
@@ -111,12 +111,12 @@ public static class QueueEndpoints
             if(album is null)
                 return Results.NotFound($"No album with albumId {albumId}");
             
-            QueueManager.PlayAlbum(album);
+            QueueManager.PlayAlbum(album, startIndex);
             return Results.Ok();
         });
 
         // TODO: Add int StartIndex and start playing album from StartIndex. if startIndex is invalid, play from 0.
-        app.MapPatch("/api/queue/playlist", ([FromQuery] int playlistId) =>
+        app.MapPatch("/api/queue/playlist", ([FromQuery] int playlistId, [FromQuery] int startIndex) =>
         {
             if(playlistId <= 0)
                 return Results.BadRequest("Invalid playlistId.");
@@ -124,8 +124,8 @@ public static class QueueEndpoints
             Playlist? playlist = DatabaseManager.GetPlaylistFromPlaylistId(playlistId);
             if(playlist is null)
                 return Results.NotFound($"No album with playlistId {playlistId}");
-            
-            QueueManager.PlayPlaylist(playlist);
+
+            QueueManager.PlayPlaylist(playlist, startIndex);
             return Results.Ok();
         });
     }

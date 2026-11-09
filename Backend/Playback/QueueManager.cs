@@ -359,7 +359,7 @@ namespace Playback
             return new PlaybackResult(track, true); // TODO: Create ShouldAutoPlay condition? Unsure.
         }
 
-        public static void PlayAlbum(Album album)
+        public static void PlayAlbum(Album album, int startIndex)
         {
             CollectionReference collectionRef = new CollectionReference(album);
             CurrentCollectionRef = collectionRef;
@@ -368,12 +368,17 @@ namespace Playback
             
             ClearQueue(true);
             AddTracksToQueue(tracks, true, false);
+
+            if(startIndex >= 0 && startIndex < Queue.Count)
+                currentIndex = startIndex;
+            else
+                currentIndex = 0;
             
             PlaybackResult newPlayback = GetCurrentPlayback();
             AudioPlayer.PlayTrackFromPlaybackResult(newPlayback);
         }
 
-        public static void PlayPlaylist(Playlist playlist)
+        public static void PlayPlaylist(Playlist playlist, int startIndex)
         {
             CollectionReference collectionRef = new CollectionReference(playlist);
             CurrentCollectionRef = collectionRef;
@@ -383,6 +388,11 @@ namespace Playback
             ClearQueue(true);
             AddTracksToQueue(tracks, true, false);
             
+            if(startIndex >= 0 && startIndex < Queue.Count)
+                currentIndex = startIndex;
+            else
+                currentIndex = 0;
+
             PlaybackResult newPlayback = GetCurrentPlayback();
             AudioPlayer.PlayTrackFromPlaybackResult(newPlayback);
         }

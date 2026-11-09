@@ -26,7 +26,7 @@ namespace CommandSystem
                 return Task.CompletedTask;
             }
 
-            QueueManager.PlayAlbum(album);
+            QueueManager.PlayAlbum(album, 0);
 
             return Task.CompletedTask;
         }
