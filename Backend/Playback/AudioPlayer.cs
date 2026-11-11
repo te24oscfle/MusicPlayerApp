@@ -104,7 +104,7 @@ namespace Playback
             Resume();
         }
 
-        public static void PlayTrackFromPlaybackResult(PlaybackResult playbackResult)
+        public static void PlayTrackFromPlaybackResult(PlaybackResult playbackResult, Track? originTrack=null)
         {
             Track? track = playbackResult.Track;
             if(track == null)
@@ -112,6 +112,24 @@ namespace Playback
                 DisposeMedia();
                 currentTrack = null;
                 return;
+            }
+
+            if(!track.IsAvailable)
+            {
+                if(track != originTrack)
+                {
+                    PlaybackResult result = QueueManager.Next();
+                    PlayTrackFromPlaybackResult(result, originTrack);
+                    return;
+                }
+                else
+                {
+                    // If looped was on, the player has tried every single track in the Queue without success
+                    // Since we know there arent any tracks available we can stop trying here.
+                    DisposeMedia();
+                    currentTrack = null;
+                    return;
+                }
             }
             
             SetTrack(track);

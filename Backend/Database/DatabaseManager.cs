@@ -154,6 +154,7 @@ namespace Database
                 AlbumCover? newAlbumCover;
                 string? currentHash = track.Metadata.AlbumCover?.Hash;
                 string newHash = AlbumCover.GetHashFromImageData(pictureInfo.PictureData);
+
                 if(currentAlbumCover is null || currentHash != newHash)
                 {
                     newAlbumCover = new AlbumCover(pictureInfo);
@@ -182,6 +183,7 @@ namespace Database
                     artist = @artist,
                     album = @album,
                     album_artist = @album_artist,
+                    album_cover_id = @album_cover_id,
                     track_number = @track_number,
                     disc_number = @disc_number,
                     duration_seconds = @duration_seconds,
@@ -231,6 +233,7 @@ namespace Database
                 foreach (FailedItem<Track> item in failedTracks)
                 {
                     Console.WriteLine($"\t{item.Item.FilePath}"); // TODO: Write more robust erorr messaging?
+                    Console.WriteLine($"\t{item.Exception}");
                 }
                 Console.Write("\n");
             }

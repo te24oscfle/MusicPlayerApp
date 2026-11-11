@@ -64,15 +64,11 @@ namespace Playback
         {
             lock(queueLock)
             {   
-                // Copy the queue
                 if(_queue.Count == 0)
-                {
-                    _shuffleState = ShuffleState.Enabled;
                     return;
-                }
-                    
+
+                // Copy the queue 
                 _shuffledQueue = _queue.ToList();
-                Console.WriteLine(_shuffledQueue.Count);
                 QueueItem currentItem = _shuffledQueue[currentIndex];
 
                 // Take the first unbroken streak of non-persistent tracks, and remove them from the shuffle pool
@@ -92,9 +88,8 @@ namespace Playback
                 _shuffledQueue.Insert(0, currentItem);
                 _shuffledQueue.InsertRange(1, nonPersistentTracks);
 
-                // Reset currentIndex and enable shuffle
+                // Reset currentIndex
                 currentIndex = 0;
-                _shuffleState = ShuffleState.Enabled;
             }
         }
 
@@ -106,10 +101,7 @@ namespace Playback
                 // It may have been solved now by checking if the FindIndex called returned -1, in which case currentIndex is set to zero.
                 // It's not the greatest solution, but for now, I'll leave it as is.
                 if(_shuffledQueue.Count == 0)
-                {
-                    _shuffleState = ShuffleState.Disabled;
                     return;
-                }
                 
                 if(currentIndex >= 0 && currentIndex < _shuffledQueue.Count)
                 {
@@ -125,8 +117,7 @@ namespace Playback
                     currentIndex = index;
                 }
                 
-                _shuffledQueue.Clear();
-                _shuffleState = ShuffleState.Disabled;   
+                _shuffledQueue.Clear(); 
             }   
         }
         

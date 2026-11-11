@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.Data.Sqlite;
 using MusicLibrary;
 
@@ -542,7 +543,13 @@ namespace Database
         public static Track ReadTrack(SqliteDataReader reader)
         {
             string filePath = reader.GetString(reader.GetOrdinal("file_path"));
-            DateTime fileLastModifiedUtc = File.GetLastWriteTimeUtc(filePath);
+
+            // If the file doesnt exist, we just refer to the value listed in the database
+            DateTime fileLastModifiedUtc = File.Exists(filePath) ? File.GetLastWriteTimeUtc(filePath) : DateTime.Parse(
+                reader.GetString(reader.GetOrdinal("last_modified_utc")),
+                null,
+                DateTimeStyles.RoundtripKind
+            );
             
             // Create Track Metadata
             TrackMetadata trackMetadata = new TrackMetadata(
@@ -559,11 +566,13 @@ namespace Database
             );
 
             // Create Track
+            // If filepath doesnt exist, track is marked as unavailable and cannot be played.
             Track track = new Track(
                 reader.GetInt32(reader.GetOrdinal("track_id")),
                 reader.GetString(reader.GetOrdinal("file_path")),
                 reader.GetInt32(reader.GetOrdinal("album_id")),
-                trackMetadata
+                trackMetadata,
+                File.Exists(filePath)
             );
 
             // Initilize AlbumCover

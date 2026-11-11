@@ -62,24 +62,28 @@ public class Track
     public string FilePath { get; }
     public int AlbumId { get; set; }
     public TrackMetadata Metadata { get; }
-    public bool ShouldUpdate { get; set; } = false;
+    public bool IsAvailable { get; }
 
-    public Track(int trackId, string filePath, int albumId, TrackMetadata metadata)
+    public Track(int trackId, string filePath, int albumId, TrackMetadata metadata, bool isAvailable)
     {
         TrackId = trackId;
         FilePath = filePath;
         AlbumId = albumId;
         Metadata = metadata;
+        IsAvailable = isAvailable;
     }
 
     public Track(string filePath) 
-        : this(0, filePath, 0, new TrackMetadata(new ATL.Track(filePath))) {}
+        : this(0, filePath, 0, new TrackMetadata(new ATL.Track(filePath)), File.Exists(filePath)) {}
 
     public Track(int trackId, string filePath) 
-        : this(trackId, filePath, 0, new TrackMetadata(new ATL.Track(filePath))) {}
+        : this(trackId, filePath, 0, new TrackMetadata(new ATL.Track(filePath)), File.Exists(filePath)) {}
     
     public void InitilizeAlbumCover(AlbumCover albumCover)
     {
+        if(!IsAvailable)
+            throw new InvalidOperationException("Track is unavailable.");
+        
         if(Metadata.AlbumCover is not null)
             throw new InvalidOperationException("The AlbumCover is already initilized.");
         
@@ -88,6 +92,9 @@ public class Track
 
     public bool IsSynced()
     {
+        if(!IsAvailable)
+            throw new InvalidOperationException("Track is unavailable.");
+        
         string? dbLastModifiedUtcString = DatabaseHelper.Read(
             """
             SELECT last_modified_utc FROM tracks
