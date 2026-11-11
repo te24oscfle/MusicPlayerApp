@@ -51,6 +51,7 @@ namespace Playback
         private static int currentIndex = 0;
         private static LoopState _loopState = LoopState.LoopQueue;
         private static ShuffleState _shuffleState = ShuffleState.Disabled;
+        private static Random rand = new Random();
         
         public static List<QueueItem> Queue => _shuffleState == ShuffleState.Disabled ? _queue : _shuffledQueue;
         public static List<QueueItem> OppositeQueue => _shuffleState == ShuffleState.Enabled ? _queue : _shuffledQueue;
@@ -62,10 +63,16 @@ namespace Playback
         private static void EnableShuffle()
         {
             lock(queueLock)
-            {
+            {   
                 // Copy the queue
+                if(_queue.Count == 0)
+                {
+                    _shuffleState = ShuffleState.Enabled;
+                    return;
+                }
+                    
                 _shuffledQueue = _queue.ToList();
-                
+                Console.WriteLine(_shuffledQueue.Count);
                 QueueItem currentItem = _shuffledQueue[currentIndex];
 
                 // Take the first unbroken streak of non-persistent tracks, and remove them from the shuffle pool
@@ -98,6 +105,12 @@ namespace Playback
                 // TODO: There may be a bug here if tracks in the queue are deleted before shuffle is disabled
                 // It may have been solved now by checking if the FindIndex called returned -1, in which case currentIndex is set to zero.
                 // It's not the greatest solution, but for now, I'll leave it as is.
+                if(_shuffledQueue.Count == 0)
+                {
+                    _shuffleState = ShuffleState.Disabled;
+                    return;
+                }
+                
                 if(currentIndex >= 0 && currentIndex < _shuffledQueue.Count)
                 {
                     QueueItem currentItem = _shuffledQueue[currentIndex];
@@ -126,6 +139,8 @@ namespace Playback
         {
             _shuffleState = shuffleState;
             
+            Console.WriteLine($"New shuffle state: {_shuffleState}");
+
             if(_shuffleState == ShuffleState.Enabled)
                 EnableShuffle();
             else
@@ -134,15 +149,25 @@ namespace Playback
         
         public static void AddTracksToQueue(List<Track> tracks, bool isPersistent, bool addToFront=false)
         {
+            Console.WriteLine(nameof(Queue));
+            
             List<QueueItem> queueItems = tracks.Select(track => new QueueItem(track, isPersistent)).ToList();
             if (!addToFront || Queue.Count == 0)
+            {
                 Queue.AddRange(queueItems);
+                OppositeQueue.AddRange(queueItems);
+            }
             else
             {
                 int targetIndex = currentIndex + 1;
                 while (targetIndex < Queue.Count && Queue[targetIndex].IsPersistent is false)
                     targetIndex++;
                 Queue.InsertRange(targetIndex, queueItems);
+
+                int oppositeTargetIndex = currentIndex + 1;
+                while (oppositeTargetIndex < OppositeQueue.Count && OppositeQueue[oppositeTargetIndex].IsPersistent is false)
+                    oppositeTargetIndex++;
+                OppositeQueue.InsertRange(oppositeTargetIndex, queueItems);
             }
 
             Console.WriteLine($"Added {tracks.Count} tracks");
@@ -372,7 +397,15 @@ namespace Playback
             if(startIndex >= 0 && startIndex < Queue.Count)
                 currentIndex = startIndex;
             else
-                currentIndex = 0;
+            {
+                currentIndex = _shuffleState == ShuffleState.Enabled ? rand.Next(0, Queue.Count) : 0;
+            }
+            
+            if(_shuffleState == ShuffleState.Enabled)
+            {
+                // Call EnableShuffle() to shuffle the Queue (if shuffle is enabled)
+                EnableShuffle();
+            }
             
             PlaybackResult newPlayback = GetCurrentPlayback();
             AudioPlayer.PlayTrackFromPlaybackResult(newPlayback);
@@ -387,11 +420,19 @@ namespace Playback
             
             ClearQueue(true);
             AddTracksToQueue(tracks, true, false);
-            
+
             if(startIndex >= 0 && startIndex < Queue.Count)
                 currentIndex = startIndex;
             else
-                currentIndex = 0;
+            {
+                currentIndex = _shuffleState == ShuffleState.Enabled ? rand.Next(0, Queue.Count) : 0;
+            }
+            
+            if(_shuffleState == ShuffleState.Enabled)
+            {
+                // Call EnableShuffle() to shuffle the Queue (if shuffle is enabled)
+                EnableShuffle();
+            }
 
             PlaybackResult newPlayback = GetCurrentPlayback();
             AudioPlayer.PlayTrackFromPlaybackResult(newPlayback);
