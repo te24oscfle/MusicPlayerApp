@@ -133,7 +133,7 @@ section {
     min-width: 0;
 
     align-content: start;
-    justify-content: center;
+    justify-content: center !important;
 
     width: 100%;
 

@@ -191,19 +191,38 @@ async function testPlaybackEndpoints() {
 // testQueueEndpoints()
 // testPlaybackEndpoints()
 
-// async function populateAlbumCards(container) {
-//     // Get all imported albums
-//     const albumData = await window.api.getAlbums()
-//     console.log(albumData)
-    
-//     // Create album card for each album
-//     albumData.forEach(album => {
-//         const card = document.createElement("div")
-//         card.classlist.add("album-card")
+function getCoverUrl(coverData) {
+    if(!coverData.imageData || !coverData.mimeType) return
+    return `url("data:${coverData.mimeType};base64,${coverData.imageData}")`
+}
 
-//         const cover = document.
-//     });
-// }
+async function populateAlbumCards(albumData, container) {
+    // Create album card for each album
+    albumData.forEach(album => {
+        const card = document.createElement("div")
+        card.className = "album-card"
+
+        const cover = document.createElement("div")
+        cover.className = "cover"
+        cover.style.backgroundImage = getCoverUrl(album.albumCover)
+        
+
+        const metadata = document.createElement("div")
+        metadata.className = "metadata"
+
+        const title = document.createElement("p")
+        title.className = "album-title"
+        title.textContent = album.title
+
+        const artist = document.createElement("p")
+        artist.className = "album-artist"
+        artist.textContent = album.artist
+
+        metadata.append(title, artist)
+        card.append(cover, metadata)
+        container.appendChild(card)
+    });
+}
 
 function adjustAlbumCardMetadataLinewrap(albumCard) {
     const titleElement = albumCard.querySelector(".album-title")
@@ -227,6 +246,12 @@ function adjustAlbumCardMetadataLinewrap(albumCard) {
     }
 }
 
-document.querySelectorAll(".album-card").forEach(adjustAlbumCardMetadataLinewrap)
+async function main() {
+    const importedAlbums = await window.api.getAlbums()
+    console.log(importedAlbums)
+    
+    populateAlbumCards(importedAlbums, document.querySelector(".album-container"))
+    document.querySelectorAll(".album-card").forEach(adjustAlbumCardMetadataLinewrap)
+}
 
 main()
