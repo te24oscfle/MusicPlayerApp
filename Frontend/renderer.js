@@ -190,3 +190,43 @@ async function testPlaybackEndpoints() {
 // testLibraryEndpoints()
 // testQueueEndpoints()
 // testPlaybackEndpoints()
+
+// async function populateAlbumCards(container) {
+//     // Get all imported albums
+//     const albumData = await window.api.getAlbums()
+//     console.log(albumData)
+    
+//     // Create album card for each album
+//     albumData.forEach(album => {
+//         const card = document.createElement("div")
+//         card.classlist.add("album-card")
+
+//         const cover = document.
+//     });
+// }
+
+function adjustAlbumCardMetadataLinewrap(albumCard) {
+    const titleElement = albumCard.querySelector(".album-title")
+    const artistElement = albumCard.querySelector(".album-artist")
+
+    if(!titleElement ||!artistElement) return;
+
+    // The height of a single line in pixels
+    const titleLineHeight = parseFloat(window.getComputedStyle(titleElement).lineHeight)
+
+    // Check if the height of the title is greater than a single line.
+    // We multiply lineHeight by 1.5 to add a safety margin.
+    const isTitleTwoLines = titleElement.offsetHeight > (titleLineHeight * 1.5)
+    if(isTitleTwoLines) {
+        // Limit artist to one line
+        console.log("artist is limited to one line")
+        artistElement.style.webkitLineClamp = "1"
+    } else {
+        // Allow artist to use two lines
+        artistElement.style.webkitLineClamp = "2"
+    }
+}
+
+document.querySelectorAll(".album-card").forEach(adjustAlbumCardMetadataLinewrap)
+
+main()
