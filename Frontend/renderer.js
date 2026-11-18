@@ -204,9 +204,9 @@ async function populateAlbumCards(albumData, container) {
 
         const cover = document.createElement("div")
         cover.className = "cover"
-        cover.style.backgroundImage = getCoverUrl(album.albumCover)
+        if(album.albumCover)
+            cover.style.backgroundImage = getCoverUrl(album.albumCover)
         
-
         const metadata = document.createElement("div")
         metadata.className = "metadata"
 
@@ -224,7 +224,7 @@ async function populateAlbumCards(albumData, container) {
     });
 }
 
-function adjustAlbumCardMetadataLinewrap(albumCard) {
+function adjustAlbumCardLinewrap(albumCard) {
     const titleElement = albumCard.querySelector(".album-title")
     const artistElement = albumCard.querySelector(".album-artist")
 
@@ -238,7 +238,6 @@ function adjustAlbumCardMetadataLinewrap(albumCard) {
     const isTitleTwoLines = titleElement.offsetHeight > (titleLineHeight * 1.5)
     if(isTitleTwoLines) {
         // Limit artist to one line
-        console.log("artist is limited to one line")
         artistElement.style.webkitLineClamp = "1"
     } else {
         // Allow artist to use two lines
@@ -246,12 +245,80 @@ function adjustAlbumCardMetadataLinewrap(albumCard) {
     }
 }
 
+function sortAlbums(albums, sortPredicate) {
+    return albums.sort(sortPredicate)
+}
+
+let activeAlbum = undefined;
+let activeLayer = document.querySelector(".layer-a")
+let transistionActive = false;
+
+let mousePos = {
+    x: 0,
+    y: 0
+}
+
+function getInactiveLayer() {
+    return activeLayer == "a" ? document.querySelector(".layer-b") : document.querySelector(".layer-a")
+}
+
+function setBackground(albumCardElement) {
+    
+    if(!albumCardElement.querySelector(".cover").style.backgroundImage) return;
+    const coverURL = albumCardElement.querySelector(".cover").style.backgroundImage
+
+    const inactiveLayer = getInactiveLayer()
+
+    inactiveLayer.style.backgroundImage = coverURL
+
+    activeLayer.style.opacity = 0
+    inactiveLayer.style.opacity = 0.5
+    
+    activeAlbum = albumCardElement
+    activeLayer = inactiveLayer
+
+    transistionActive = true
+    setTimeout(() => transistionActive = false, 500)
+}
+
+function updateMousePosition(event) {
+    mousePos.x = event.clientX ?? mousePos.x
+    mousePos.y = event.clientY ?? mousePos.y
+}
+
+function updateBackgroundImage() {
+    requestAnimationFrame(() => {
+        if (transistionActive) return;
+        const element = document.elementFromPoint(mousePos.x, mousePos.y)?.closest(".album-card")
+
+        if(element && activeAlbum !== element)
+            setBackground(element)
+    })
+}
+
 async function main() {
     const importedAlbums = await window.api.getAlbums()
-    console.log(importedAlbums)
+    const sortedAlbms = sortAlbums(importedAlbums, (a, b) => a.title.localeCompare(b.title))
     
-    populateAlbumCards(importedAlbums, document.querySelector(".album-container"))
-    document.querySelectorAll(".album-card").forEach(adjustAlbumCardMetadataLinewrap)
+    populateAlbumCards(sortedAlbms, document.querySelector(".album-container"))
+    document.querySelectorAll(".album-card").forEach(adjustAlbumCardLinewrap)
+    
+    document.querySelectorAll(".background-layer").forEach(layer => {
+        layer.addEventListener("transitionend", event => {
+            updateMousePosition(event)
+            updateBackgroundImage()
+        })
+    })
+
+    document.addEventListener("mousemove", (event) => {
+        updateMousePosition(event)
+        updateBackgroundImage()
+    })
+    
+    document.addEventListener("scroll", (event) => {
+        updateMousePosition(event)
+        updateBackgroundImage()
+    })
 }
 
 main()

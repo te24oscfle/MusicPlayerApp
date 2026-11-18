@@ -70,15 +70,36 @@ section {
     background-color: #202020;
     border-radius: 20px;
     
+    position: relative;
+    isolation: isolate;
     overflow: hidden;
+}
+
+.background {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.background-layer {
+    position: absolute;
+    inset: -10px;
+    background-size: cover;
+    background-color: #202020;
+    filter: blur(20px);
+    opacity: 0;
+    transition: 0.25s ease;
 }
 
 .shown {
     display: flex !important;
 }
 
-.main-content-frame .content-frame {
+.content-frame {
     display: none;
+    z-index: 1;
 }
 
 .library-page {
@@ -162,7 +183,7 @@ section {
     justify-content: flex-start;
     flex-direction: column;
     
-    background-color: #101010;
+    background-color: #202020;
     color: #E5E5E5;
     padding: 10px;
     border-radius: 8px;
@@ -171,6 +192,14 @@ section {
     width: 205px;
     height: 258px;
     box-sizing: border-box;
+
+    transition: 0.25s;
+}
+
+.album-card:hover {
+    background-color: #303030;
+    cursor: pointer;
+    transition: 0.25s;
 }
 
 .album-card .cover {
