@@ -65,6 +65,3 @@ Frontend/node_modules/
 # Frontend build output
 Frontend/dist/
 Frontend/out/
-
-# Frontend assets
-Frontend/assets
